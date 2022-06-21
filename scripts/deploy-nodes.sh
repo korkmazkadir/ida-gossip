@@ -43,7 +43,7 @@ function throttle()
 
     sudo tc class add dev $nic parent 1: classid "${class_id}" htb rate 20mbit
 
-    sudo tc qdisc add dev $nic parent "${class_id}" netem delay 50ms
+    sudo tc qdisc add dev $nic parent "${class_id}" netem delay 15ms
 
 }
 

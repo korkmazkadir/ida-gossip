@@ -79,7 +79,7 @@ func (d *Demux) UpdateRound(round int) {
 	defer d.mutex.Unlock()
 
 	// Round value should increase one by one
-	if round < d.currentRound || round != (d.currentRound+1) {
+	if (round-d.currentRound) < 0 || (round-d.currentRound) > 1 {
 		panic(fmt.Errorf("illegal round value, current round value %d, provided round value %d", d.currentRound, round))
 	}
 

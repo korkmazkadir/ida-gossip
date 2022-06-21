@@ -6,5 +6,5 @@
     - name: copy artifacts to the remote server
       copy:
         src: ../artifacts/config.json
-        dest: ~/rapidchain/config.json
+        dest: ~/ida-gossip/config.json
         mode: preserve

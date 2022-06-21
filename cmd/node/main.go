@@ -74,7 +74,7 @@ func main() {
 	statLogger := common.NewStatLogger(nodeInfo.ID)
 	rapidchain := dissemination.NewDisseminator(demux, nodeConfig, peerSet, statLogger)
 
-	runConsensus(rapidchain, nodeConfig.EndRound, nodeInfo.ID, nodeConfig.NodeCount, nodeConfig.LeaderCount, nodeConfig.BlockSize, nodeList)
+	runConsensus(rapidchain, nodeConfig.EndRound, nodeConfig.RoundSleepTime, nodeInfo.ID, nodeConfig.NodeCount, nodeConfig.SourceCount, nodeConfig.MessageSize, nodeList)
 
 	// collects stats abd uploads to registry
 	log.Printf("uploading stats to the registry\n")
@@ -133,7 +133,7 @@ func getNodeInfo(netAddress string) registery.NodeInfo {
 	return registery.NodeInfo{IPAddress: ipAddress, PortNumber: portNumber}
 }
 
-func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, nodeID int, nodeCount int, leaderCount int, blockSize int, nodeList []registery.NodeInfo) {
+func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleepTime int, nodeID int, nodeCount int, leaderCount int, blockSize int, nodeList []registery.NodeInfo) {
 
 	time.Sleep(5 * time.Second)
 	log.Println("Consensus started")
@@ -157,19 +157,20 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, nodeID int
 		log.Printf("waiting to deliver messages...\n")
 		messages = rc.WaitForMessage(currentRound)
 
-		log.Printf("delivered all messages...\n")
+		log.Printf("all messages delivered.\n")
 		payloadSize := 0
 		for i := range messages {
 			log.Printf("Round: %d Message[%d] %x\n", currentRound, i, encodeBase64(messages[i].Hash())[:15])
 			payloadSize += len(messages[i].Payload)
 		}
 
-		log.Printf("Received payload size payload size is %d bytes\n", payloadSize)
+		log.Printf("round finished, payload size payload size: %d bytes\n", payloadSize)
 
 		currentRound++
-		//time.Sleep(2 * time.Second)
 
-		//log.Printf("Appended block: %x\n", encodeBase64(hashBlock(block)[:15]))
+		sleepTime := time.Duration(roundSleepTime) * time.Second
+		log.Printf("sleeping for %s\n", sleepTime)
+		time.Sleep(sleepTime)
 
 	}
 
@@ -186,6 +187,7 @@ func createBlock(round int, nodeID int, blockSize int, leaderCount int) common.M
 	block := common.Message{
 		Round:   round,
 		Issuer:  nodeID,
+		Time:    time.Now().UnixMilli(),
 		Payload: getRandomByteSlice(payloadSize),
 	}
 

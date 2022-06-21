@@ -5,7 +5,7 @@
   tasks:
     - name: Zips stats forlder on registery machine
       community.general.archive:
-        path: ~/rapidchain/stats
+        path: ~/ida-gossip/stats
         dest: ~/stats.zip
         format: zip
 

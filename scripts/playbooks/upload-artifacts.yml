@@ -5,11 +5,11 @@
   tasks:
     - name: remove artifacts from the server
       file:
-        path: ~/rapidchain
+        path: ~/ida-gossip
         state: absent
 
     - name: copy artifacts to the remote server
       copy:
         src: ../artifacts/
-        dest: ~/rapidchain
+        dest: ~/ida-gossip
         mode: preserve

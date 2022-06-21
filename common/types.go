@@ -11,6 +11,8 @@ type Message struct {
 
 	Round int
 
+	Time int64
+
 	Payload []byte
 }
 
@@ -39,6 +41,8 @@ type Chunk struct {
 
 	// Round of the block
 	Round int
+
+	Time int64
 
 	// The number of expected chunks to reconstruct a block
 	ChunkCount int

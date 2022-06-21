@@ -33,14 +33,11 @@ func NewDisseminator(demux *common.Demux, config registery.NodeConfig, peerSet n
 
 func (d *Disseminator) SubmitMessage(round int, message common.Message) {
 
-	// starts a new epoch
-	d.statLogger.NewRound(round)
-
 	// sets the round for demultiplexer
 	d.demultiplexer.UpdateRound(round)
 
 	// chunks the block
-	chunks := common.ChunkMessage(message, d.nodeConfig.BlockChunkCount)
+	chunks := common.ChunkMessage(message, d.nodeConfig.MessageChunkCount)
 	//log.Printf("proposing block %x\n", encodeBase64(merkleRoot[:15]))
 
 	// disseminate chunks over different nodes
@@ -51,17 +48,15 @@ func (d *Disseminator) SubmitMessage(round int, message common.Message) {
 
 func (d *Disseminator) WaitForMessage(round int) []common.Message {
 
-	// starts a new epoch
-	d.statLogger.NewRound(round)
-
 	// sets the round for demultiplexer
 	d.demultiplexer.UpdateRound(round)
 
-	startTime := time.Now()
-	messages := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.BlockChunkCount, &d.peerSet, d.nodeConfig.LeaderCount)
-	d.statLogger.LogBlockReceive(time.Since(startTime).Milliseconds())
+	messages := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.MessageChunkCount, &d.peerSet, d.nodeConfig.SourceCount, d.statLogger)
 
-	d.statLogger.LogEndOfRound()
+	//TODO: how does it work for multiple source messages
+	for i := range messages {
+		d.statLogger.MessageReceived(round, (time.Now().UnixMilli() - messages[i].Time))
+	}
 
 	return messages
 }

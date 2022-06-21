@@ -12,18 +12,20 @@ type NodeConfig struct {
 
 	EndRound int
 
+	RoundSleepTime int
+
 	GossipFanout int
 
-	LeaderCount int
+	SourceCount int
 
-	BlockSize int
+	MessageSize int
 
-	BlockChunkCount int
+	MessageChunkCount int
 }
 
 func (nc NodeConfig) Hash() []byte {
 
-	str := fmt.Sprintf("%d,%x,%d,%d,%d,%d,%d", nc.NodeCount, nc.EpochSeed, nc.EndRound, nc.GossipFanout, nc.LeaderCount, nc.BlockSize, nc.BlockChunkCount)
+	str := fmt.Sprintf("%d,%x,%d,%d,%d,%d,%d", nc.NodeCount, nc.EpochSeed, nc.EndRound, nc.GossipFanout, nc.SourceCount, nc.MessageSize, nc.MessageChunkCount)
 
 	h := sha256.New()
 	_, err := h.Write([]byte(str))
@@ -39,8 +41,9 @@ func (nc *NodeConfig) CopyFields(cp NodeConfig) {
 	nc.EpochSeed = nc.EpochSeed[:0]
 	nc.EpochSeed = append(nc.EpochSeed, cp.EpochSeed...)
 	nc.EndRound = cp.EndRound
+	nc.RoundSleepTime = cp.RoundSleepTime
 	nc.GossipFanout = cp.GossipFanout
-	nc.LeaderCount = cp.LeaderCount
-	nc.BlockSize = cp.BlockSize
-	nc.BlockChunkCount = cp.BlockChunkCount
+	nc.SourceCount = cp.SourceCount
+	nc.MessageSize = cp.MessageSize
+	nc.MessageChunkCount = cp.MessageChunkCount
 }

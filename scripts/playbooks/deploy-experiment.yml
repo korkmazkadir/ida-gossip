@@ -8,7 +8,7 @@
         cmd: pkill registery || /bin/true
 
     - name: deploying registery service
-      shell: cd ~/rapidchain; nohup ./registery > registery.log 2>&1 &
+      shell: cd ~/ida-gossip; nohup ./registery > registery.log 2>&1 &
 
 
 - hosts: all
@@ -18,4 +18,4 @@
         cmd: pkill node || /bin/true
 
     - name: deploying nodes
-      shell: cd ~/rapidchain; ./deploy-nodes.sh 25 "{{ groups['registry'][0] }}:1234" eno1
+      shell: cd ~/ida-gossip; ./deploy-nodes.sh 256 "{{ groups['registry'][0] }}:1234" eno1
