@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"math"
 	"math/rand"
 	"net"
 	"net/rpc"
@@ -182,7 +181,7 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 
 func createBlock(round int, nodeID int, blockSize int, leaderCount int) common.Message {
 
-	payloadSize := int(math.Ceil(float64(blockSize) / float64(leaderCount)))
+	payloadSize := blockSize
 
 	block := common.Message{
 		Round:   round,

@@ -53,6 +53,9 @@ func (d *Disseminator) WaitForMessage(round int) []common.Message {
 
 	messages := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.MessageChunkCount, &d.peerSet, d.nodeConfig.SourceCount, d.statLogger)
 
+	// logs queue length
+	d.statLogger.AvgQueuLength(round, d.demultiplexer.GetMeanQueueLength(round))
+
 	//TODO: how does it work for multiple source messages
 	for i := range messages {
 		d.statLogger.MessageReceived(round, (time.Now().UnixMilli() - messages[i].Time))

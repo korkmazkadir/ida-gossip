@@ -10,7 +10,7 @@ import (
 
 func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, peerSet *network.PeerSet, leaderCount int, statLogger *common.StatLogger) []common.Message {
 
-	chunkChan, err := demux.GetVoteBlockChunkChan(round)
+	chunkChan, err := demux.GetMessageChunkChan(round)
 	if err != nil {
 		panic(err)
 	}

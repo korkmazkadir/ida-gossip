@@ -10,6 +10,13 @@
     - name: deploying registery service
       shell: cd ~/ida-gossip; nohup ./registery > registery.log 2>&1 &
 
+    - name: Add or modify nofile soft limit for the user root
+      community.general.pam_limits:
+        domain: root
+        limit_type: soft
+        limit_item: nofile
+        value: 102400
+
 
 - hosts: all
   tasks:

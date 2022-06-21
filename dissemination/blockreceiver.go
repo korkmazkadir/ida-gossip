@@ -8,9 +8,10 @@ import (
 )
 
 type blockReceiver struct {
-	blockCount int
-	chunkCount int
-	blockMap   map[string][]common.Chunk
+	blockCount         int
+	chunkCount         int
+	blockMap           map[string][]common.Chunk
+	receivedChunkCount int
 }
 
 func newBlockReceiver(leaderCount int, chunkCount int) *blockReceiver {
@@ -29,6 +30,9 @@ func (r *blockReceiver) AddChunk(chunk common.Chunk) {
 	key := string(chunk.Issuer)
 	chunkSlice := r.blockMap[key]
 	r.blockMap[key] = append(chunkSlice, chunk)
+
+	//r.receivedChunkCount++
+	//log.Printf("A chunk received: sender %d index %d total count %d\n", chunk.Issuer, chunk.ChunkIndex, r.receivedChunkCount)
 
 	if len(r.blockMap) > r.blockCount {
 		panic(fmt.Errorf("there are more blocks than expected, the number of blocks is %d", len(r.blockMap)))

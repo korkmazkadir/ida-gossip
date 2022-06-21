@@ -47,6 +47,7 @@ func constructChunks(message Message, blockBytes []byte, numberOfChunks int) []C
 		}
 
 		chunk := Chunk{
+			Issuer:     message.Issuer,
 			Round:      message.Round,
 			Time:       message.Time,
 			ChunkCount: numberOfChunks,
