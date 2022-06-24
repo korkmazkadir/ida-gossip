@@ -43,7 +43,7 @@ func (c *P2PClient) Start() {
 	c.mainLoop()
 }
 
-// SendBlockChunk enques a chunk of a block to send
+// SendBlockChunk enqueues a chunk of a block to send
 func (c *P2PClient) SendBlockChunk(chunk common.Chunk) {
 
 	c.blockChunks <- chunk

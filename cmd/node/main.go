@@ -69,7 +69,7 @@ func main() {
 		log.Printf("received node list %d/%d\n", nodeCount, nodeConfig.NodeCount)
 	}
 
-	peerSet := createPeerSet(nodeList, nodeConfig.GossipFanout, nodeInfo.ID)
+	peerSet := createPeerSet(nodeList, nodeConfig.GossipFanout, nodeInfo.ID, nodeInfo.IPAddress)
 	statLogger := common.NewStatLogger(nodeInfo.ID)
 	rapidchain := dissemination.NewDisseminator(demux, nodeConfig, peerSet, statLogger)
 
@@ -87,7 +87,7 @@ func main() {
 	log.Printf("exiting as expected...\n")
 }
 
-func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int) network.PeerSet {
+func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localIPAddress string) network.PeerSet {
 
 	var copyNodeList []registery.NodeInfo
 	copyNodeList = append(copyNodeList, nodeList...)
@@ -105,7 +105,8 @@ func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int) networ
 		}
 
 		peer := copyNodeList[i]
-		if peer.ID == nodeID {
+		//TODO: do not connect nodes from local machine
+		if peer.ID == nodeID || peer.IPAddress == localIPAddress {
 			continue
 		}
 
@@ -133,9 +134,6 @@ func getNodeInfo(netAddress string) registery.NodeInfo {
 }
 
 func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleepTime int, nodeID int, nodeCount int, leaderCount int, blockSize int, nodeList []registery.NodeInfo) {
-
-	time.Sleep(5 * time.Second)
-	log.Println("Consensus started")
 
 	currentRound := 1
 	for currentRound <= numberOfRounds {
@@ -167,9 +165,13 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 
 		currentRound++
 
-		sleepTime := time.Duration(roundSleepTime) * time.Second
-		log.Printf("sleeping for %s\n", sleepTime)
-		time.Sleep(sleepTime)
+		sleepTime := int64(roundSleepTime*1000) - (time.Now().UnixMilli() - messages[0].Time)
+		log.Printf("sleeping for %d ms\n", sleepTime)
+		time.Sleep(time.Duration(sleepTime) * time.Millisecond)
+
+		//sleepTime := time.Duration(roundSleepTime) * time.Second
+		//log.Printf("sleeping for %s\n", sleepTime)
+		//time.Sleep(sleepTime)
 
 	}
 

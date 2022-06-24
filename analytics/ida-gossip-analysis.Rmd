@@ -1,0 +1,127 @@
+---
+title: "ida-gossip-analysis"
+author: "Kadir Korkmaz"
+date: "6/22/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+
+stats <- read.csv("~/Desktop/ida-experiment-data/double-source-8-machines-120-rounds/stats.log", sep = "\t", header = FALSE)
+colnames(stats) <- c('NodeID','Round','Event', 'Value')
+
+# the first delivered chunk is used to calculate when a node start contributing to dissemination
+first_chunk_df <- stats %>% filter( Event == "FIRST_CHUNK_RECEIVED" )
+
+# length of the received message queue
+queue_length_df <- stats %>% filter( Event == "QUEUE_LENGTH" )
+
+# time needed to deliver a message
+message_delivery_df <- stats %>% filter( Event == "MESSAGE_RECEIVED" )
+
+```
+
+\newpage
+# First Chunk Delivery
+
+```{r, echo=FALSE}
+
+library(ggplot2)
+
+
+
+
+z_val <- qnorm(.025,lower.tail=FALSE)
+
+
+summary(first_chunk_df$Value)
+
+
+ci_first_chunk_df = z_val * sd(first_chunk_df$Value) / sqrt(nrow(first_chunk_df))
+
+first_chunk_df_mean <- mean(first_chunk_df$Value)
+
+first_chunk_df_mean - ci_first_chunk_df
+first_chunk_df_mean
+first_chunk_df_mean + ci_first_chunk_df
+sd(first_chunk_df$Value)
+
+first_chunk_df_grouped <- first_chunk_df %>% 
+  group_by(Round) %>%
+  summarise(
+    Mean = mean(Value)
+  )
+
+
+ggplot(first_chunk_df_grouped, aes(x=Round, y=Mean)) + geom_point()
+
+
+ 
+```
+
+
+\newpage
+# Message Delivery
+```{r, echo=FALSE}
+
+  
+z_val <- qnorm(.025,lower.tail=FALSE)
+
+
+summary(message_delivery_df$Value)
+
+
+ci_message_delivery_df = z_val * sd(message_delivery_df$Value) / sqrt(nrow(message_delivery_df))
+
+message_delivery_df_mean <- mean(message_delivery_df$Value)
+
+message_delivery_df_mean - ci_message_delivery_df
+message_delivery_df_mean
+message_delivery_df_mean + ci_message_delivery_df
+sd(message_delivery_df$Value)
+
+message_delivery_df_grouped <- message_delivery_df %>% 
+  group_by(Round) %>%
+  summarise(
+    Mean = mean(Value)
+  )
+
+
+ggplot(message_delivery_df_grouped, aes(x=Round, y=Mean)) + geom_point()
+
+
+
+```
+
+
+# First chunk delivery cummulative sum
+```{r}
+
+
+row_count <- nrow(first_chunk_df)
+
+row_count
+
+row_order_vector <- 1:row_count
+
+first_chunk_df <- first_chunk_df %>% arrange(Value)
+first_chunk_df$RowOrder <- row_order_vector
+
+first_chunk_df <- first_chunk_df %>% mutate(
+  Percentatile = RowOrder*100/row_count
+)
+
+
+first_chunk_df <- first_chunk_df %>% filter(Percentatile < 99.1)
+
+png("first_chunk_delivery_cummulative.png")
+
+ggplot(first_chunk_df, aes(x=Value, y=Percentatile)) + geom_point() + xlab("Delivery Time(ms)") + ylab("Percentage of Nodes")
+
+dev.off()
+```
+
+

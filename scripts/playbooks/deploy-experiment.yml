@@ -25,4 +25,4 @@
         cmd: pkill node || /bin/true
 
     - name: deploying nodes
-      shell: cd ~/ida-gossip; ./deploy-nodes.sh 256 "{{ groups['registry'][0] }}:1234" eno1
+      shell: cd ~/ida-gossip; ./deploy-nodes.sh 128 "{{ groups['registry'][0] }}:1234" eno1
