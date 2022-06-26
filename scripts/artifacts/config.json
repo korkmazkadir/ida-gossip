@@ -1,10 +1,10 @@
 {
   "NodeCount": 1024,
   "EpochSeed": "AQIDBAU=",
-  "EndRound": 50,
-  "RoundSleepTime": 30,
+  "EndRound": 60,
+  "RoundSleepTime": 10,
   "GossipFanout": 8,
-  "SourceCount" : 1,
-  "MessageSize": 2097152,
+  "SourceCount" : 128,
+  "MessageSize": 16384,
   "MessageChunkCount": 1
 }

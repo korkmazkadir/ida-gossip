@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
 
-stats <- read.csv("~/Desktop/ida-experiment-data/double-source-8-machines-120-rounds/stats.log", sep = "\t", header = FALSE)
+stats <- read.csv("~/Desktop/ida-experiment-data/test/6/stats.log", sep = "\t", header = FALSE)
 colnames(stats) <- c('NodeID','Round','Event', 'Value')
 
 # the first delivered chunk is used to calculate when a node start contributing to dissemination
@@ -98,7 +98,7 @@ ggplot(message_delivery_df_grouped, aes(x=Round, y=Mean)) + geom_point()
 
 
 # First chunk delivery cummulative sum
-```{r}
+```{r, echo=FALSE}
 
 
 row_count <- nrow(first_chunk_df)
@@ -114,14 +114,72 @@ first_chunk_df <- first_chunk_df %>% mutate(
   Percentatile = RowOrder*100/row_count
 )
 
-
 first_chunk_df <- first_chunk_df %>% filter(Percentatile < 99.1)
 
-png("first_chunk_delivery_cummulative.png")
+#png("first_chunk_delivery_cummulative.png")
 
 ggplot(first_chunk_df, aes(x=Value, y=Percentatile)) + geom_point() + xlab("Delivery Time(ms)") + ylab("Percentage of Nodes")
 
-dev.off()
+#dev.off()
+
+
+
+
+first_chunk_df %>% filter(Percentatile == 25)
+first_chunk_df %>% filter(Percentatile == 50)
+first_chunk_df %>% filter(Percentatile == 75)
+first_chunk_df %>% filter(Percentatile == 95)
+head(first_chunk_df %>% filter(Percentatile >= 99), n=1)
+
+
+nrow(first_chunk_df)
+
+length(boxplot.stats(first_chunk_df$Value)$out)
+
+boxplot.stats(first_chunk_df$Value)$stats
+
+#ggplot(data.sum, aes(x=variable))+geom_boxplot(aes(ymin =min, lower = mean-sd, middle = mean, upper = mean+sd, ymax =max), stat="identity")
+
+#ggplot(first_chunk_df, aes(x=Event, y=Value)) + 
+#  geom_boxplot()
+
+
+```
+
+\newpage
+# QueueLength
+```{r, echo=FALSE}
+
+
+
+z_val <- qnorm(.025,lower.tail=FALSE)
+
+
+summary(queue_length_df$Value)
+
+
+ci_queue_length_df = z_val * sd(queue_length_df$Value) / sqrt(nrow(queue_length_df))
+
+queue_length_df_mean <- mean(queue_length_df$Value)
+
+queue_length_df_mean - ci_queue_length_df
+queue_length_df_mean
+queue_length_df_mean + ci_queue_length_df
+sd(queue_length_df$Value)
+
+queue_length_df_grouped <- queue_length_df %>% 
+  group_by(Round) %>%
+  summarise(
+    Mean = mean(Value)
+  )
+
+
+ggplot(queue_length_df_grouped, aes(x=Round, y=Mean)) + geom_point()
+
+
+
+boxplot(queue_length_df$Value)
+
 ```
 
 

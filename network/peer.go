@@ -51,6 +51,31 @@ func (p *PeerSet) ForwardChunk(chunk common.Chunk) {
 	}
 }
 
+func (p *PeerSet) GetAvgQueueLength() float64 {
+
+	var sum float64
+	var count int
+
+	for _, peer := range p.peers {
+		if peer.err != nil {
+			continue
+		}
+		count++
+		sum += peer.GetAvgQueueLength()
+	}
+
+	return sum / float64(count)
+}
+
+func (p *PeerSet) ResetQueueLengthCounters() {
+	for _, peer := range p.peers {
+		if peer.err != nil {
+			continue
+		}
+		peer.ResetQueueLengthCounters()
+	}
+}
+
 func (p *PeerSet) selectPeer(index int) *P2PClient {
 
 	peerCount := len(p.peers)

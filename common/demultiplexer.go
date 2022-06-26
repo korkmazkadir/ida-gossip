@@ -20,10 +20,6 @@ type Demux struct {
 	processedMessageMap map[int]map[string]struct{}
 
 	blockChunkChanMap map[int]chan Chunk
-
-	lengthSnapshotMap map[int]chan []int
-
-	queueLengthMap map[int][]int
 }
 
 // NewDemultiplexer creates a new demultiplexer with initial round value
@@ -33,7 +29,6 @@ func NewDemultiplexer(initialRound int) *Demux {
 
 	demux.processedMessageMap = make(map[int]map[string]struct{})
 	demux.blockChunkChanMap = make(map[int]chan Chunk)
-	demux.queueLengthMap = make(map[int][]int)
 
 	return demux
 }
@@ -64,8 +59,6 @@ func (d *Demux) EnqueBlockChunk(chunk Chunk) {
 	if lengthChan == 0 {
 		lengthChan = 1
 	}
-
-	d.queueLengthMap[chunkRound] = append(d.queueLengthMap[chunkRound], lengthChan)
 
 	d.markAsProcessed(chunkRound, chunkHash)
 }
@@ -100,24 +93,6 @@ func (d *Demux) UpdateRound(round int) {
 	d.deletePreviousRoundMessages()
 }
 
-func (d *Demux) GetMeanQueueLength(round int) float64 {
-
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
-
-	// Round value should increase one by one
-	if (round-d.currentRound) < 0 || (round-d.currentRound) > 1 {
-		panic(fmt.Errorf("illegal round value, current round value %d, provided round value %d", d.currentRound, round))
-	}
-
-	var meanRoundQueuLength float64
-	for i := range d.queueLengthMap[round] {
-		meanRoundQueuLength += float64(d.queueLengthMap[round][i])
-	}
-	meanRoundQueuLength = meanRoundQueuLength / float64(len(d.queueLengthMap[round]))
-	return meanRoundQueuLength
-}
-
 // All the following functions are helper functions.
 // They must be called from previous functions because
 // they are not thread safe!
@@ -128,8 +103,6 @@ func (d *Demux) deletePreviousRoundMessages() {
 
 	delete(d.processedMessageMap, previousRound)
 	delete(d.blockChunkChanMap, previousRound)
-	delete(d.queueLengthMap, previousRound)
-
 }
 
 func (d *Demux) getProcessedMessageMap(round int) map[string]struct{} {

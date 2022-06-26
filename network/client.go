@@ -3,6 +3,8 @@ package network
 import (
 	"fmt"
 	"net/rpc"
+	"sync"
+	"sync/atomic"
 
 	"github.com/korkmazkadir/ida-gossip/common"
 )
@@ -15,6 +17,11 @@ type P2PClient struct {
 	rpcClient *rpc.Client
 
 	blockChunks chan common.Chunk
+
+	mutexQueueLength  sync.Mutex
+	sumQueueLength    int32
+	queueLengthCount  int32
+	onAirMessageCount int32
 
 	err error
 }
@@ -47,12 +54,46 @@ func (c *P2PClient) Start() {
 func (c *P2PClient) SendBlockChunk(chunk common.Chunk) {
 
 	c.blockChunks <- chunk
+
+	c.mutexQueueLength.Lock()
+	defer c.mutexQueueLength.Unlock()
+	//calculates average queue length
+	c.sumQueueLength += atomic.LoadInt32(&c.onAirMessageCount)
+	c.queueLengthCount++
+}
+
+func (c *P2PClient) ResetQueueLengthCounters() {
+
+	c.mutexQueueLength.Lock()
+	defer c.mutexQueueLength.Unlock()
+
+	c.queueLengthCount = 0
+	c.sumQueueLength = 0
+}
+
+func (c *P2PClient) GetAvgQueueLength() float64 {
+
+	c.mutexQueueLength.Lock()
+	defer c.mutexQueueLength.Unlock()
+
+	return float64(c.sumQueueLength) / float64(c.queueLengthCount)
 }
 
 func (c *P2PClient) mainLoop() {
 
 	for {
 		blockChunk := <-c.blockChunks
-		go c.rpcClient.Call("P2PServer.HandleBlockChunk", blockChunk, nil)
+		//go c.rpcClient.Call("P2PServer.HandleBlockChunk", blockChunk, nil)
+
+		go func() {
+
+			atomic.AddInt32(&c.onAirMessageCount, 1)
+
+			c.rpcClient.Call("P2PServer.HandleBlockChunk", blockChunk, nil)
+
+			atomic.AddInt32(&c.onAirMessageCount, -1)
+
+		}()
+
 	}
 }
