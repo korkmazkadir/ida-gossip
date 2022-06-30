@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
 
-stats <- read.csv("~/Desktop/ida-experiment-data/test/6/stats.log", sep = "\t", header = FALSE)
+stats <- read.csv("~/Desktop/ida-experiment-data/2mb-128chunks-8leaders/stats.log", sep = "\t", header = FALSE)
 colnames(stats) <- c('NodeID','Round','Event', 'Value')
 
 # the first delivered chunk is used to calculate when a node start contributing to dissemination
