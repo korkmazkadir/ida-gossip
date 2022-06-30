@@ -8,7 +8,7 @@ import (
 	"github.com/korkmazkadir/ida-gossip/network"
 )
 
-func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, peerSet *network.PeerSet, leaderCount int, statLogger *common.StatLogger) []common.Message {
+func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, peerSet *network.PeerSet, leaderCount int, statLogger *common.StatLogger, electedLeaders []int) ([]common.Message, []int) {
 
 	chunkChan, err := demux.GetMessageChunkChan(round)
 	if err != nil {
@@ -17,21 +17,52 @@ func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, peerS
 
 	receiver := newBlockReceiver(leaderCount, chunkCount)
 	firstChunkReceived := false
-	for !receiver.ReceivedAll() {
-		c := <-chunkChan
 
-		if c.Round != round {
-			panic(fmt.Errorf("expected round is %d and chunk from round %d", round, c.Round))
-		}
+	//TODO: get timeout value from config
+	timeOut := time.After(2 * time.Minute)
 
-		if !firstChunkReceived {
-			statLogger.FirstChunkReceived(round, (time.Now().UnixMilli() - c.Time))
-			firstChunkReceived = true
-		}
-
-		receiver.AddChunk(c)
-		peerSet.ForwardChunk(c)
+	chunkReceivedMap := make(map[int]bool)
+	for _, leader := range electedLeaders {
+		chunkReceivedMap[leader] = false
 	}
 
-	return receiver.GetBlocks()
+	for !receiver.ReceivedAll() {
+
+		select {
+		case c := <-chunkChan:
+			{
+
+				if c.Round != round {
+					panic(fmt.Errorf("expected round is %d and chunk from round %d", round, c.Round))
+				}
+
+				// a chunk is received from the leader
+				chunkReceivedMap[c.Issuer] = true
+
+				if !firstChunkReceived {
+					statLogger.FirstChunkReceived(round, (time.Now().UnixMilli() - c.Time))
+					firstChunkReceived = true
+				}
+
+				receiver.AddChunk(c)
+				peerSet.ForwardChunk(c)
+			}
+		case <-timeOut:
+			// checks for unresponsive leaders
+			var leadersToRemove []int
+			for leader, value := range chunkReceivedMap {
+				if value == false {
+					leadersToRemove = append(leadersToRemove, leader)
+				}
+			}
+
+			// this means that at least one leader is unresponsive
+			if len(leadersToRemove) > 0 {
+				return nil, leadersToRemove
+			}
+		}
+
+	}
+
+	return receiver.GetBlocks(), nil
 }

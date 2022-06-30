@@ -143,7 +143,9 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 		var messages []common.Message
 
 		// if elected as a leader submits a block
-		if isElectedAsLeader(nodeList, currentRound, nodeID, leaderCount) {
+		isElected, electedLeaders := isElectedAsLeader(nodeList, currentRound, nodeID, leaderCount)
+
+		if isElected {
 			log.Println("elected as leader")
 			b := createBlock(currentRound, nodeID, blockSize, leaderCount)
 			rc.SubmitMessage(currentRound, b)
@@ -152,7 +154,14 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 		// TODO: is it better to log individual messages?
 		// waits to deliver the block
 		log.Printf("waiting to deliver messages...\n")
-		messages = rc.WaitForMessage(currentRound)
+		messages, unresponsiveLeaders := rc.WaitForMessage(currentRound, electedLeaders)
+
+		if unresponsiveLeaders != nil {
+			log.Printf("Unresponsive leader detected: %v\n", unresponsiveLeaders)
+			nodeList = removeUnresponsiveLeaders(unresponsiveLeaders, nodeList)
+			log.Printf("Unresponsive leaders are removed.")
+			continue
+		}
 
 		log.Printf("all messages delivered.\n")
 		payloadSize := 0
@@ -180,6 +189,28 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 ////////////////////
 ///// utils ////////
 ////////////////////
+
+func removeUnresponsiveLeaders(unresponsiveLeaders []int, nodeList []registery.NodeInfo) []registery.NodeInfo {
+
+	var newNodeList []registery.NodeInfo
+	for _, nodeInfo := range nodeList {
+
+		isInList := false
+		for _, l := range unresponsiveLeaders {
+			if l == nodeInfo.ID {
+				isInList = true
+				break
+			}
+		}
+
+		if isInList == false {
+			newNodeList = append(newNodeList, nodeInfo)
+		}
+
+	}
+
+	return newNodeList
+}
 
 func createBlock(round int, nodeID int, blockSize int, leaderCount int) common.Message {
 
@@ -218,7 +249,7 @@ func getEnvWithDefault(key string, defaultValue string) string {
 	return val
 }
 
-func isElectedAsLeader(nodeList []registery.NodeInfo, round int, nodeID int, leaderCount int) bool {
+func isElectedAsLeader(nodeList []registery.NodeInfo, round int, nodeID int, leaderCount int) (bool, []int) {
 
 	// assumes that node list is same for all nodes
 	// shuffle the node list using round number as the source of randomness
@@ -226,15 +257,16 @@ func isElectedAsLeader(nodeList []registery.NodeInfo, round int, nodeID int, lea
 	rand.Shuffle(len(nodeList), func(i, j int) { nodeList[i], nodeList[j] = nodeList[j], nodeList[i] })
 
 	var electedLeaders []int
+	isElected := false
 	for i := 0; i < leaderCount; i++ {
 		electedLeaders = append(electedLeaders, nodeList[i].ID)
 		if nodeList[i].ID == nodeID {
-			log.Println("elected as leader")
-			return true
+			log.Println("=== elects as a leader ===")
+			isElected = true
 		}
 	}
 
 	log.Printf("Elected leaders: %v\n", electedLeaders)
 
-	return false
+	return isElected, electedLeaders
 }
