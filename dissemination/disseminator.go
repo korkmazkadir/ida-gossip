@@ -58,10 +58,14 @@ func (d *Disseminator) WaitForMessage(round int) []common.Message {
 	d.statLogger.AvgQueuLength(round, d.peerSet.GetAvgQueueLength())
 	d.peerSet.ResetQueueLengthCounters()
 
-	//TODO: how does it work for multiple source messages
+	var maxElapsedTime int64
 	for i := range messages {
-		d.statLogger.MessageReceived(round, (time.Now().UnixMilli() - messages[i].Time))
+		elapsedTime := time.Now().UnixMilli() - messages[i].Time
+		if elapsedTime > maxElapsedTime {
+			maxElapsedTime = elapsedTime
+		}
 	}
+	d.statLogger.MessageReceived(round, (maxElapsedTime))
 
 	return messages
 }

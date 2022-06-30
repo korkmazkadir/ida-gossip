@@ -1,36 +1,36 @@
 
-gros-5.nancy.grid5000.fr
-gros-8.nancy.grid5000.fr
-gros-9.nancy.grid5000.fr
+gros-1.nancy.grid5000.fr
+gros-6.nancy.grid5000.fr
 gros-10.nancy.grid5000.fr
-gros-17.nancy.grid5000.fr
-gros-32.nancy.grid5000.fr
-gros-34.nancy.grid5000.fr
-gros-37.nancy.grid5000.fr
-gros-41.nancy.grid5000.fr
-gros-77.nancy.grid5000.fr
-gros-78.nancy.grid5000.fr
+gros-44.nancy.grid5000.fr
+gros-46.nancy.grid5000.fr
+gros-52.nancy.grid5000.fr
+gros-53.nancy.grid5000.fr
+gros-54.nancy.grid5000.fr
+gros-55.nancy.grid5000.fr
+gros-56.nancy.grid5000.fr
+gros-57.nancy.grid5000.fr
+gros-58.nancy.grid5000.fr
+gros-59.nancy.grid5000.fr
+gros-60.nancy.grid5000.fr
+gros-61.nancy.grid5000.fr
+gros-62.nancy.grid5000.fr
+gros-63.nancy.grid5000.fr
+gros-64.nancy.grid5000.fr
+gros-65.nancy.grid5000.fr
+gros-66.nancy.grid5000.fr
+gros-67.nancy.grid5000.fr
+gros-68.nancy.grid5000.fr
+gros-69.nancy.grid5000.fr
+gros-70.nancy.grid5000.fr
+gros-71.nancy.grid5000.fr
+gros-72.nancy.grid5000.fr
+gros-73.nancy.grid5000.fr
+gros-74.nancy.grid5000.fr
+gros-76.nancy.grid5000.fr
 gros-79.nancy.grid5000.fr
-gros-80.nancy.grid5000.fr
-gros-81.nancy.grid5000.fr
-gros-82.nancy.grid5000.fr
-gros-83.nancy.grid5000.fr
-gros-84.nancy.grid5000.fr
 gros-85.nancy.grid5000.fr
-gros-86.nancy.grid5000.fr
-gros-87.nancy.grid5000.fr
-gros-88.nancy.grid5000.fr
-gros-89.nancy.grid5000.fr
-gros-90.nancy.grid5000.fr
-gros-91.nancy.grid5000.fr
-gros-92.nancy.grid5000.fr
-gros-93.nancy.grid5000.fr
-gros-94.nancy.grid5000.fr
-gros-95.nancy.grid5000.fr
-gros-96.nancy.grid5000.fr
-gros-97.nancy.grid5000.fr
-gros-98.nancy.grid5000.fr
-gros-122.nancy.grid5000.fr
+gros-100.nancy.grid5000.fr
 
 
 [all:vars]
@@ -39,4 +39,4 @@ ansible_python_interpreter=/usr/bin/python3
 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
 [registry]
-gros-5.nancy.grid5000.fr
+gros-1.nancy.grid5000.fr

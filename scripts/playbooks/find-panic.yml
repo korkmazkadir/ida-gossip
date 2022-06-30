@@ -1,0 +1,15 @@
+---
+# The playbook uploads experiment artifacts to remote machines
+
+- hosts: all
+  tasks:
+    - name: check if there is panic
+      #shell: grep -r "panic" ./ida-gossip/output/
+      #shell: grep -r "+++++++++ Round 39 +++++++++++++++" ./ida-gossip/output/ | wc -l
+      shell: grep -riL "+++++++++ Round 118 +++++++++++++++" ./ida-gossip/output/
+      ignore_errors: yes
+      register: grep_output
+    
+    - name: Print
+      debug: 
+        var: grep_output.stdout_lines
