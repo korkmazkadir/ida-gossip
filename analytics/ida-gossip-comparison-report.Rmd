@@ -1,0 +1,139 @@
+---
+title: "IDA Gossip Experiment Results"
+author: "Kadir Korkmaz"
+date: "7/1/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Experimental Setup
+
+4096 process deployed on 32 machines---128 process per machine---from Gros cluster(G5K).
+The bandwidth of each process capped at 20Mbps(Upload Bandwidth). 
+One way latency of 15ms added to each communication link(RTT is 30ms).
+
+In this set of experiments, a large message---2MB--- chunked in to 128 chunks and disseminated over different number of sources usin IDA gossip.
+1 source means that the full message is disseminated by the single source.
+2 source means that the message disseminated over 2 source each disseminate 64 chunks.
+
+Each experiment run for 120 rounds to collect enough data.
+
+A rounds ends for a node when it collects all of the 128 chunks disseminated in that round. At the end of a round, a node calculates a sleep time and sleeps. ***The sleep time is implemented to see the best possible performance of the IDA gossip.***
+
+Currently, IDA gossip implementation does not add redundancy chunks because the number of redundancy chunks are calculated according to the percentage of faulty nodes in the system.
+
+Currently, we have measured 3 metrics:
+
+* First Chunk Delivery Time (ms)
+* Message Delivery Time (ms)
+* Queue Length
+
+First Chunk Delivery Time is the measure of how early a node can contribute to the dissemination, and the smaller value is desirable.
+Message Delivery Time is the time needed to collect all 128 chunks disseminated for that round. Each message contains a time field, and this field is used to calculate elapsed time by a node. Queue length is the average number of messages on peers waiting to be forwarded. Queue length could be the precursor of contention: chunks are competing for the same resources and queue size could be helpful to understand the extend of this contention.
+
+## Table of Contents
+Page 2 contains the plots, and page 3 contains data used in plots.
+
+\newpage
+
+```{r first_chunk_delivery, echo=FALSE}
+library(ggplot2)
+
+folder_path <- "/Users/kadir/Desktop/ida-experiment-data/"
+
+df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
+p1 <- ggplot(df_chunks, aes(x=as.factor(SourceCount))) +
+      geom_boxplot(aes(
+        ymin=Min,
+        lower= FirstQuartile,
+        middle=Median,
+        upper=ThirdQuartile,
+        ymax=Max
+      ), stat="identity") + 
+      ylab("First Chunk Delivery Time(ms)") + 
+      xlab("Source Count") + 
+      expand_limits(y = 0)
+
+```
+
+
+```{r message_delivery, echo=FALSE}
+
+df_message_delivery <- read.csv(paste(folder_path, "message_received_df.tsv", sep = ""), sep = "\t", header = TRUE)
+p2 <- ggplot(df_message_delivery, aes(x=as.factor(SourceCount), y=Mean)) +
+      geom_errorbar(aes(ymin=LowerBound, ymax=UpperBound), width=.3)+
+      geom_point() + 
+      ylab("Mean Time to Deliver Message(ms)") +  
+      xlab("Source Count") +
+      expand_limits(y = 0)
+      
+
+```
+
+```{r queue_length, echo=FALSE, fig.height=3}
+
+df_queue_length <- read.csv(paste(folder_path, "queue_length_df.tsv", sep = ""), sep = "\t", header = TRUE)
+p3 <- ggplot(df_queue_length, aes(x=as.factor(SourceCount), y=Mean)) +
+      geom_errorbar(aes(ymin=LowerBound, ymax=UpperBound), width=.3)+
+      geom_point() + 
+      ylab("Mean Queue Length") +  
+      xlab("Source Count") +
+      expand_limits(y = 0) 
+
+```
+
+
+
+```{r allign_plots, echo=FALSE, fig.height=8, fig.width=8}
+
+library(gridExtra)
+
+#p1 <- p1 + theme(axis.title.x = element_blank()) 
+#p2 <- p2 + theme(axis.title.x = element_blank()) 
+#p3 <- p3 + theme(axis.title.x = element_blank()) 
+
+plots <- list( p1, p2, p3 )
+grobs <- list()
+widths <- list()
+
+for (i in 1:length(plots)){
+    grobs[[i]] <- ggplotGrob(plots[[i]])
+    widths[[i]] <- grobs[[i]]$widths[2:5]
+}
+
+maxwidth <- do.call(grid::unit.pmax, widths)
+
+for (i in 1:length(grobs)){
+     grobs[[i]]$widths[2:5] <- as.list(maxwidth)
+}
+
+do.call( "grid.arrange", c(grobs, ncol = 1) )
+
+```
+
+
+\newpage
+```{r, echo=FALSE}
+suppressPackageStartupMessages(library(dplyr))
+library(knitr)
+
+
+
+
+df_chunks <- df_chunks %>% select( SourceCount, Min, FirstQuartile, Median, ThirdQuartile, Max) %>% arrange( SourceCount )
+kable(df_chunks, caption = "First Chunk Delivery Time(ms)")
+
+df_message_delivery <- df_message_delivery  %>% select( SourceCount, LowerBound, Mean, UpperBound) %>% arrange( SourceCount )
+kable(df_message_delivery, caption = "Mean Message Delivery Time(ms)")
+
+
+df_queue_length <- df_queue_length  %>% select( SourceCount, LowerBound, Mean, UpperBound) %>% arrange( SourceCount )
+kable(df_queue_length, caption = "Queue Length")
+
+```
+
+
+

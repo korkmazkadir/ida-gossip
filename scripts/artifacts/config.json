@@ -4,7 +4,7 @@
   "EndRound": 120,
   "RoundSleepTime": 10,
   "GossipFanout": 8,
-  "SourceCount" : 2,
-  "MessageSize": 1048576,
-  "MessageChunkCount": 64
+  "SourceCount": 128,
+  "MessageSize": 16384,
+  "MessageChunkCount": 1
 }
