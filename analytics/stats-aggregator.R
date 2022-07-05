@@ -98,7 +98,7 @@ calculate_datasets <-function(directories){
 }
 
 
-path <- "~/Desktop/ida-experiment-data"
+path <- "/home/kadir/Desktop/ida-experiments-no-break"
 
 # lists directories
 directories <- list.dirs(path = path, full.names = TRUE, recursive = TRUE)

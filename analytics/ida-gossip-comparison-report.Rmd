@@ -42,7 +42,7 @@ Page 2 contains the plots, and page 3 contains data used in plots.
 ```{r first_chunk_delivery, echo=FALSE}
 library(ggplot2)
 
-folder_path <- "/Users/kadir/Desktop/ida-experiment-data/"
+folder_path <- "/home/kadir/Desktop/ida-experiments-no-break/"
 
 df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
 p1 <- ggplot(df_chunks, aes(x=as.factor(SourceCount))) +
