@@ -73,7 +73,7 @@ func main() {
 	statLogger := common.NewStatLogger(nodeInfo.ID)
 	rapidchain := dissemination.NewDisseminator(demux, nodeConfig, peerSet, statLogger)
 
-	runConsensus(rapidchain, nodeConfig.EndRound, nodeConfig.RoundSleepTime, nodeInfo.ID, nodeConfig.NodeCount, nodeConfig.SourceCount, nodeConfig.MessageSize, nodeList)
+	runConsensus(rapidchain, nodeConfig.EndRound, nodeConfig.RoundSleepTime, nodeInfo.ID, nodeConfig.SourceCount, nodeConfig.MessageSize, nodeList)
 
 	// collects stats abd uploads to registry
 	log.Printf("uploading stats to the registry\n")
@@ -133,7 +133,7 @@ func getNodeInfo(netAddress string) registery.NodeInfo {
 	return registery.NodeInfo{IPAddress: ipAddress, PortNumber: portNumber}
 }
 
-func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleepTime int, nodeID int, nodeCount int, leaderCount int, blockSize int, nodeList []registery.NodeInfo) {
+func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleepTime int, nodeID int, leaderCount int, blockSize int, nodeList []registery.NodeInfo) {
 
 	currentRound := 1
 	for currentRound <= numberOfRounds {

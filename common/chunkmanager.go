@@ -3,48 +3,81 @@ package common
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
-	"math"
+	"log"
+	"time"
+
+	"github.com/klauspost/reedsolomon"
 )
 
-func ChunkMessage(message Message, numberOfChunks int) []Chunk {
+func ChunkMessage(message Message, numberOfChunks int, dataChunkCount int) []Chunk {
 
 	blockBytes := encodeToBytes(message)
-	chunks := constructChunks(message, blockBytes, numberOfChunks)
+	chunks := constructChunks(message, blockBytes, numberOfChunks, dataChunkCount)
 	return chunks
 }
 
 // mergeChunks assumes that sanity checks are done before calling this function
-func MergeChunks(chunks []Chunk) Message {
+func MergeChunks(chunks []Chunk, numberOfChunks int, dataChunkCount int) Message {
 
-	var blockData []byte
+	data := make([][]byte, numberOfChunks)
 	for i := 0; i < len(chunks); i++ {
-		blockData = append(blockData, chunks[i].Payload...)
+		c := chunks[i]
+		data[c.ChunkIndex] = c.Payload
 	}
+
+	////////////////// Reed-Solomon Erasure Coding  //////////////////
+	start := time.Now()
+	parityChunkCount := numberOfChunks - dataChunkCount
+
+	enc, err := reedsolomon.New(dataChunkCount, parityChunkCount)
+	if err != nil {
+		panic(err)
+	}
+
+	err = enc.ReconstructData(data)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("[Decode] Erasure coding took %s", time.Since(start))
+	///////////////////////////////////////////////////////////////////
+
+	// combines data
+	// TODO: is it a good way to implement this
+	var blockData []byte
+	for i := 0; i < dataChunkCount; i++ {
+		blockData = append(blockData, data[i]...)
+	}
+	//
 
 	return decodeToBlock(blockData)
 }
 
-func constructChunks(message Message, blockBytes []byte, numberOfChunks int) []Chunk {
+func constructChunks(message Message, blockBytes []byte, numberOfChunks int, dataChunkCount int) []Chunk {
 
 	var chunks []Chunk
-	chunkSize := int(math.Ceil(float64(len(blockBytes)) / float64(numberOfChunks)))
 
-	if chunkSize == 0 {
-		panic(fmt.Errorf("chunk payload size is 0"))
+	////////////////// Reed-Solomon Erasure Coding  //////////////////
+	start := time.Now()
+	parityChunkCount := numberOfChunks - dataChunkCount
+
+	enc, err := reedsolomon.New(dataChunkCount, parityChunkCount)
+	if err != nil {
+		panic(err)
 	}
 
+	data, err := enc.Split(blockBytes)
+	if err != nil {
+		panic(err)
+	}
+
+	err = enc.Encode(data)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("[Encode] Erasure coding took %s", time.Since(start))
+	///////////////////////////////////////////////////////////////////
+
 	for i := 0; i < numberOfChunks; i++ {
-
-		startIndex := i * chunkSize
-		endIndex := startIndex + chunkSize
-
-		var payload []byte
-		if i < (numberOfChunks - 1) {
-			payload = blockBytes[startIndex:endIndex]
-		} else {
-			payload = blockBytes[startIndex:]
-		}
 
 		chunk := Chunk{
 			Issuer:     message.Issuer,
@@ -52,7 +85,7 @@ func constructChunks(message Message, blockBytes []byte, numberOfChunks int) []C
 			Time:       message.Time,
 			ChunkCount: numberOfChunks,
 			ChunkIndex: i,
-			Payload:    payload,
+			Payload:    data[i],
 		}
 
 		chunks = append(chunks, chunk)

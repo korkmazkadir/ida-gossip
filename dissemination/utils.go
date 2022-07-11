@@ -8,14 +8,14 @@ import (
 	"github.com/korkmazkadir/ida-gossip/network"
 )
 
-func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, peerSet *network.PeerSet, leaderCount int, statLogger *common.StatLogger, electedLeaders []int) ([]common.Message, []int) {
+func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, dataChunkCount int, peerSet *network.PeerSet, leaderCount int, statLogger *common.StatLogger, electedLeaders []int) ([]common.Message, []int) {
 
 	chunkChan, err := demux.GetMessageChunkChan(round)
 	if err != nil {
 		panic(err)
 	}
 
-	receiver := newBlockReceiver(leaderCount, chunkCount)
+	receiver := newBlockReceiver(leaderCount, chunkCount, dataChunkCount)
 	firstChunkReceived := false
 
 	//TODO: get timeout value from config

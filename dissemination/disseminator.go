@@ -37,7 +37,7 @@ func (d *Disseminator) SubmitMessage(round int, message common.Message) {
 	d.demultiplexer.UpdateRound(round)
 
 	// chunks the block
-	chunks := common.ChunkMessage(message, d.nodeConfig.MessageChunkCount)
+	chunks := common.ChunkMessage(message, d.nodeConfig.MessageChunkCount, d.nodeConfig.DataChunkCount)
 	//log.Printf("proposing block %x\n", encodeBase64(merkleRoot[:15]))
 
 	// disseminate chunks over different nodes
@@ -51,7 +51,7 @@ func (d *Disseminator) WaitForMessage(round int, electedLeaders []int) ([]common
 	// sets the round for demultiplexer
 	d.demultiplexer.UpdateRound(round)
 
-	messages, leadersToRemove := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.MessageChunkCount, &d.peerSet, d.nodeConfig.SourceCount, d.statLogger, electedLeaders)
+	messages, leadersToRemove := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.MessageChunkCount, d.nodeConfig.DataChunkCount, &d.peerSet, d.nodeConfig.SourceCount, d.statLogger, electedLeaders)
 
 	if leadersToRemove != nil {
 		d.peerSet.ResetQueueLengthCounters()

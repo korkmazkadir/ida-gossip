@@ -7,5 +7,6 @@
   "ConnectionCount": 1,
   "SourceCount" : 1,
   "MessageSize": 2097152,
-  "MessageChunkCount": 128
+  "MessageChunkCount": 128,
+  "DataChunkCount": 48
 }

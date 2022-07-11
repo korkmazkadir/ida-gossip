@@ -10,16 +10,18 @@ import (
 type blockReceiver struct {
 	blockCount         int
 	chunkCount         int
+	dataChunkCount     int
 	blockMap           map[string][]common.Chunk
 	receivedChunkCount int
 }
 
-func newBlockReceiver(leaderCount int, chunkCount int) *blockReceiver {
+func newBlockReceiver(leaderCount int, chunkCount int, dataChunkCount int) *blockReceiver {
 
 	r := &blockReceiver{
-		blockCount: leaderCount,
-		chunkCount: chunkCount,
-		blockMap:   make(map[string][]common.Chunk),
+		blockCount:     leaderCount,
+		chunkCount:     chunkCount,
+		dataChunkCount: dataChunkCount,
+		blockMap:       make(map[string][]common.Chunk),
 	}
 
 	return r
@@ -47,7 +49,7 @@ func (r *blockReceiver) ReceivedAll() bool {
 	}
 
 	for _, chunkSlice := range r.blockMap {
-		if len(chunkSlice) != r.chunkCount {
+		if len(chunkSlice) != r.dataChunkCount {
 			return false
 		}
 	}
@@ -77,7 +79,7 @@ func (r *blockReceiver) GetBlocks() []common.Message {
 			return receivedChunks[i].ChunkIndex < receivedChunks[j].ChunkIndex
 		})
 
-		block := common.MergeChunks(receivedChunks)
+		block := common.MergeChunks(receivedChunks, r.chunkCount, r.dataChunkCount)
 		messages = append(messages, block)
 	}
 

@@ -23,11 +23,13 @@ type NodeConfig struct {
 	MessageSize int
 
 	MessageChunkCount int
+
+	DataChunkCount int
 }
 
 func (nc NodeConfig) Hash() []byte {
 
-	str := fmt.Sprintf("%d,%x,%d,%d,%d,%d,%d,%d", nc.NodeCount, nc.EpochSeed, nc.EndRound, nc.GossipFanout, nc.SourceCount, nc.MessageSize, nc.MessageChunkCount, nc.ConnectionCount)
+	str := fmt.Sprintf("%d,%x,%d,%d,%d,%d,%d,%d,%d", nc.NodeCount, nc.EpochSeed, nc.EndRound, nc.GossipFanout, nc.SourceCount, nc.MessageSize, nc.MessageChunkCount, nc.ConnectionCount, nc.DataChunkCount)
 
 	h := sha256.New()
 	_, err := h.Write([]byte(str))
@@ -49,4 +51,5 @@ func (nc *NodeConfig) CopyFields(cp NodeConfig) {
 	nc.SourceCount = cp.SourceCount
 	nc.MessageSize = cp.MessageSize
 	nc.MessageChunkCount = cp.MessageChunkCount
+	nc.DataChunkCount = cp.DataChunkCount
 }
