@@ -69,7 +69,7 @@ func main() {
 		log.Printf("received node list %d/%d\n", nodeCount, nodeConfig.NodeCount)
 	}
 
-	peerSet := createPeerSet(nodeList, nodeConfig.GossipFanout, nodeInfo.ID, nodeInfo.IPAddress)
+	peerSet := createPeerSet(nodeList, nodeConfig.GossipFanout, nodeInfo.ID, nodeInfo.IPAddress, nodeConfig.ConnectionCount)
 	statLogger := common.NewStatLogger(nodeInfo.ID)
 	rapidchain := dissemination.NewDisseminator(demux, nodeConfig, peerSet, statLogger)
 
@@ -87,7 +87,7 @@ func main() {
 	log.Printf("exiting as expected...\n")
 }
 
-func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localIPAddress string) network.PeerSet {
+func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localIPAddress string, connectionCount int) network.PeerSet {
 
 	var copyNodeList []registery.NodeInfo
 	copyNodeList = append(copyNodeList, nodeList...)
@@ -110,7 +110,7 @@ func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localI
 			continue
 		}
 
-		err := peerSet.AddPeer(peer.IPAddress, peer.PortNumber)
+		err := peerSet.AddPeer(peer.IPAddress, peer.PortNumber, connectionCount)
 		if err != nil {
 			panic(err)
 		}

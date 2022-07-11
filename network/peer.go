@@ -12,9 +12,9 @@ type PeerSet struct {
 	peers []*P2PClient
 }
 
-func (p *PeerSet) AddPeer(IPAddress string, portNumber int) error {
+func (p *PeerSet) AddPeer(IPAddress string, portNumber int, connectionCount int) error {
 
-	client, err := NewClient(IPAddress, portNumber)
+	client, err := NewClient(IPAddress, portNumber, connectionCount)
 	if err != nil {
 		return err
 	}

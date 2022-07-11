@@ -14,7 +14,9 @@ type P2PClient struct {
 	IPAddress  string
 	portNumber int
 
-	rpcClient *rpc.Client
+	//rpcClient *rpc.Client
+
+	rpcClients []*rpc.Client
 
 	blockChunks chan common.Chunk
 
@@ -27,17 +29,25 @@ type P2PClient struct {
 }
 
 // NewClient creates a new client
-func NewClient(IPAddress string, portNumber int) (*P2PClient, error) {
+func NewClient(IPAddress string, portNumber int, connectionCount int) (*P2PClient, error) {
 
-	rpcClient, err := rpc.Dial("tcp", fmt.Sprintf("%s:%d", IPAddress, portNumber))
-	if err != nil {
-		return nil, err
+	if connectionCount < 1 {
+		panic(fmt.Errorf("connection count is %d, it must be bigger than 1", connectionCount))
+	}
+
+	var clients []*rpc.Client
+	for i := 0; i < connectionCount; i++ {
+		rpcClient, err := rpc.Dial("tcp", fmt.Sprintf("%s:%d", IPAddress, portNumber))
+		if err != nil {
+			return nil, err
+		}
+		clients = append(clients, rpcClient)
 	}
 
 	client := &P2PClient{}
 	client.IPAddress = IPAddress
 	client.portNumber = portNumber
-	client.rpcClient = rpcClient
+	client.rpcClients = append(client.rpcClients, clients...)
 
 	client.blockChunks = make(chan common.Chunk, 1024)
 
@@ -81,15 +91,27 @@ func (c *P2PClient) GetAvgQueueLength() float64 {
 
 func (c *P2PClient) mainLoop() {
 
+	var sendChunkCount int64
+	connectionCount := int64(len(c.rpcClients))
+
 	for {
+
+		sendChunkCount++
+		rpcClient := c.rpcClients[sendChunkCount%connectionCount]
+
 		blockChunk := <-c.blockChunks
+
 		//go c.rpcClient.Call("P2PServer.HandleBlockChunk", blockChunk, nil)
 
 		go func() {
 
 			atomic.AddInt32(&c.onAirMessageCount, 1)
 
-			c.rpcClient.Call("P2PServer.HandleBlockChunk", blockChunk, nil)
+			err := rpcClient.Call("P2PServer.HandleBlockChunk", blockChunk, nil)
+			//TODO: needs to handle the error properly
+			if err != nil {
+				panic(err)
+			}
 
 			atomic.AddInt32(&c.onAirMessageCount, -1)
 
