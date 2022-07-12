@@ -116,7 +116,7 @@ calculate_datasets <- function(directories) {
   write.table(queue_length_df, file = paste(path, "/queue_length_df.tsv", sep = ""), quote = FALSE, sep = "\t", col.names = TRUE, row.names = FALSE)
 }
 
-path <- "/home/kadir/Desktop/conneciton_count_effect _erasure_coding"
+path <- "/home/kadir/Desktop/ida_connection_count_effect"
 
 # lists directories
 directories <- list.dirs(path = path, full.names = TRUE, recursive = TRUE)

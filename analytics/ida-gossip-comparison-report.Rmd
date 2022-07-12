@@ -42,7 +42,7 @@ Page 2 contains the plots, and page 3 contains data used in plots.
 ```{r first_chunk_delivery, echo=FALSE}
 library(ggplot2)
 
-folder_path <- "/home/kadir/Desktop/conneciton_count_effect _erasure_coding/"
+folder_path <- "/home/kadir/Desktop/ida_connection_count_effect/"
 target_variable <- as.name("ConnectionCount")
 
 df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
@@ -106,7 +106,8 @@ library(gridExtra)
 #p2 <- p2 + theme(axis.title.x = element_blank()) 
 #p3 <- p3 + theme(axis.title.x = element_blank()) 
 
-plots <- list( p1, p2, p3 )
+#plots <- list( p1, p2, p3 )
+plots <- list( p1, p2)
 grobs <- list()
 widths <- list()
 
@@ -139,8 +140,8 @@ df_message_delivery <- df_message_delivery  %>% select( !!target_variable, Min, 
 kable(df_message_delivery, caption = "Message Delivery Time(ms)")
 
 
-df_queue_length <- df_queue_length  %>% select( !!target_variable, LowerBound, Mean, UpperBound, RowCount) %>% arrange( !!target_variable )
-kable(df_queue_length, caption = "Queue Length")
+#df_queue_length <- df_queue_length  %>% select( !!target_variable, LowerBound, Mean, UpperBound, RowCount) %>% arrange( !!target_variable )
+#kable(df_queue_length, caption = "Queue Length")
 
 ```
 
