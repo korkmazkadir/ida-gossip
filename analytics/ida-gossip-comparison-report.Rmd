@@ -42,10 +42,11 @@ Page 2 contains the plots, and page 3 contains data used in plots.
 ```{r first_chunk_delivery, echo=FALSE}
 library(ggplot2)
 
-folder_path <- "/home/kadir/Desktop/ida-experiments-no-break/"
+folder_path <- "/home/kadir/Desktop/conneciton_count_effect _erasure_coding/"
+target_variable <- as.name("ConnectionCount")
 
 df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
-p1 <- ggplot(df_chunks, aes(x=as.factor(SourceCount))) +
+p1 <- ggplot(df_chunks, aes(x= as.factor(!!target_variable) )) +
       geom_boxplot(aes(
         ymin=Min,
         lower= FirstQuartile,
@@ -54,8 +55,11 @@ p1 <- ggplot(df_chunks, aes(x=as.factor(SourceCount))) +
         ymax=Max
       ), stat="identity") + 
       ylab("First Chunk Delivery Time(ms)") + 
-      xlab("Source Count") + 
-      expand_limits(y = 0)
+      xlab(target_variable) + 
+      expand_limits(y = 0) +
+      geom_point(aes(y=Mean, color=""))+
+      geom_errorbar(aes( ymin=MeanLowerBound, ymax=MeanUpperBound, color=""), width=.2) +
+      guides(color = FALSE)
 
 ```
 
@@ -63,24 +67,31 @@ p1 <- ggplot(df_chunks, aes(x=as.factor(SourceCount))) +
 ```{r message_delivery, echo=FALSE}
 
 df_message_delivery <- read.csv(paste(folder_path, "message_received_df.tsv", sep = ""), sep = "\t", header = TRUE)
-p2 <- ggplot(df_message_delivery, aes(x=as.factor(SourceCount), y=Mean)) +
-      geom_errorbar(aes(ymin=LowerBound, ymax=UpperBound), width=.3)+
-      geom_point() + 
-      ylab("Mean Time to Deliver Message(ms)") +  
-      xlab("Source Count") +
-      expand_limits(y = 0)
+p2 <- ggplot(df_message_delivery, aes(x=as.factor(!!target_variable))) +
+      geom_boxplot(aes(
+        ymin=Min,
+        lower= FirstQuartile,
+        middle=Median,
+        upper=ThirdQuartile,
+        ymax=Max
+      ), stat="identity") + 
+      ylab("Message Delivery Time(ms)") + 
+      xlab(target_variable) + 
+      expand_limits(y = 0) +
+      geom_point(aes(y=Mean, color=""))+
+      geom_errorbar(aes( ymin=MeanLowerBound, ymax=MeanUpperBound, color=""), width=.2) +
+      guides(color = FALSE)
       
-
 ```
 
 ```{r queue_length, echo=FALSE, fig.height=3}
 
 df_queue_length <- read.csv(paste(folder_path, "queue_length_df.tsv", sep = ""), sep = "\t", header = TRUE)
-p3 <- ggplot(df_queue_length, aes(x=as.factor(SourceCount), y=Mean)) +
+p3 <- ggplot(df_queue_length, aes(x=as.factor(!!target_variable), y=Mean)) +
       geom_errorbar(aes(ymin=LowerBound, ymax=UpperBound), width=.3)+
       geom_point() + 
       ylab("Mean Queue Length") +  
-      xlab("Source Count") +
+      xlab(target_variable) +
       expand_limits(y = 0) 
 
 ```
@@ -121,16 +132,14 @@ suppressPackageStartupMessages(library(dplyr))
 library(knitr)
 
 
-
-
-df_chunks <- df_chunks %>% select( SourceCount, Min, FirstQuartile, Median, ThirdQuartile, Max) %>% arrange( SourceCount )
+df_chunks <- df_chunks %>% select( !!target_variable, Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable )
 kable(df_chunks, caption = "First Chunk Delivery Time(ms)")
 
-df_message_delivery <- df_message_delivery  %>% select( SourceCount, LowerBound, Mean, UpperBound) %>% arrange( SourceCount )
-kable(df_message_delivery, caption = "Mean Message Delivery Time(ms)")
+df_message_delivery <- df_message_delivery  %>% select( !!target_variable, Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable )
+kable(df_message_delivery, caption = "Message Delivery Time(ms)")
 
 
-df_queue_length <- df_queue_length  %>% select( SourceCount, LowerBound, Mean, UpperBound) %>% arrange( SourceCount )
+df_queue_length <- df_queue_length  %>% select( !!target_variable, LowerBound, Mean, UpperBound, RowCount) %>% arrange( !!target_variable )
 kable(df_queue_length, caption = "Queue Length")
 
 ```
