@@ -21,6 +21,9 @@ func main() {
 
 	hostname := getEnvWithDefault("NODE_HOSTNAME", "127.0.0.1")
 	registryAddress := getEnvWithDefault("REGISTRY_ADDRESS", "localhost:1234")
+	processIndex := getEnvWithDefault("PROCESS_INDEX", "-1")
+
+	log.Printf("Process Index: %s\n", processIndex)
 
 	demux := common.NewDemultiplexer(0)
 	server := network.NewServer(demux)

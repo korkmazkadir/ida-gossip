@@ -68,7 +68,7 @@ for (( i=1; i<=$number_of_nodes; i++ ))
 do
 
    node_id=${HOSTNAME}_${i}
-   nohup ./node 2> output/"$i.log" &
+   env PROCESS_INDEX="${i}" nohup ./node 2> output/"$i.log" &
    node_pid=$!
 
    throttle $i $node_pid
