@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"fmt"
 	"log"
 	"math/rand"
@@ -166,7 +165,7 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 		log.Printf("all messages delivered.\n")
 		payloadSize := 0
 		for i := range messages {
-			log.Printf("Round: %d Message[%d] %x\n", currentRound, i, encodeBase64(messages[i].Hash())[:15])
+			log.Printf("Round: %d Message[%d] %x\n", currentRound, i, common.EncodeBase64(messages[i].Hash())[:15])
 			payloadSize += len(messages[i].Payload)
 		}
 
@@ -220,23 +219,10 @@ func createBlock(round int, nodeID int, blockSize int, leaderCount int) common.M
 		Round:   round,
 		Issuer:  nodeID,
 		Time:    time.Now().UnixMilli(),
-		Payload: getRandomByteSlice(payloadSize),
+		Payload: common.GetRandomByteSlice(payloadSize),
 	}
 
 	return block
-}
-
-func encodeBase64(hex []byte) string {
-	return base64.StdEncoding.EncodeToString([]byte(hex))
-}
-
-func getRandomByteSlice(size int) []byte {
-	data := make([]byte, size)
-	_, err := rand.Read(data)
-	if err != nil {
-		panic(err)
-	}
-	return data
 }
 
 func getEnvWithDefault(key string, defaultValue string) string {

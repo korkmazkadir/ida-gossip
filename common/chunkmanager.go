@@ -2,8 +2,10 @@ package common
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/gob"
 	"log"
+	"math"
 	"time"
 
 	"github.com/klauspost/reedsolomon"
@@ -77,6 +79,10 @@ func constructChunks(message Message, blockBytes []byte, numberOfChunks int, dat
 	log.Printf("[Encode] Erasure coding took %s", time.Since(start))
 	///////////////////////////////////////////////////////////////////
 
+	// Size of a Merkle path in Bytes to authenticate the chunk
+	merklePathSize := int(math.Log2(float64(numberOfChunks))+1) * sha256.Size
+	log.Printf("Merkle path size is %d bytes\n", merklePathSize)
+
 	for i := 0; i < numberOfChunks; i++ {
 
 		chunk := Chunk{
@@ -85,6 +91,7 @@ func constructChunks(message Message, blockBytes []byte, numberOfChunks int, dat
 			Time:       message.Time,
 			ChunkCount: numberOfChunks,
 			ChunkIndex: i,
+			MerklePath: GetRandomByteSlice(merklePathSize),
 			Payload:    data[i],
 		}
 

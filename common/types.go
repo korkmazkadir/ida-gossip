@@ -37,11 +37,14 @@ func (m Message) Hash() []byte {
 // BlockChunk defines a chunk of a block.
 // BlockChunks disseminate fater in the gossip network because they are very small compared to a Block
 type Chunk struct {
+
+	// 	NodeID of the issuer
 	Issuer int
 
 	// Round of the block
 	Round int
 
+	// Time of block creation
 	Time int64
 
 	// The number of expected chunks to reconstruct a block
@@ -49,6 +52,9 @@ type Chunk struct {
 
 	// Chunk index
 	ChunkIndex int
+
+	// Contains merkle path to authenticate the chunk
+	MerklePath []byte
 
 	// Chunk payload
 	Payload []byte
