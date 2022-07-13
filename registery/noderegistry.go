@@ -1,6 +1,7 @@
 package registery
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -23,13 +24,19 @@ type NodeList struct {
 type NodeRegistry struct {
 	mutex           sync.Mutex
 	registeredNodes []NodeInfo
-	config          NodeConfig
-	statKeeper      *StatKeeper
+
+	failedNodes   []NodeInfo
+	finishedNodes []NodeInfo
+	startedNodes  []NodeInfo
+
+	config       NodeConfig
+	statKeeper   *StatKeeper
+	statusLogger *StatusLogger
 }
 
-func NewNodeRegistry(config NodeConfig) *NodeRegistry {
+func NewNodeRegistry(config NodeConfig, statusLogger *StatusLogger) *NodeRegistry {
 
-	return &NodeRegistry{config: config}
+	return &NodeRegistry{config: config, statusLogger: statusLogger}
 }
 
 // Register registers a node with specific node info
@@ -51,6 +58,70 @@ func (nr *NodeRegistry) Register(nodeInfo *NodeInfo, reply *NodeInfo) error {
 
 	return nil
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+func (nr *NodeRegistry) NodeStarted(nodeInfo *NodeInfo, reply *int) error {
+
+	nr.mutex.Lock()
+	defer nr.mutex.Unlock()
+
+	log.Printf("node started %d\n", nodeInfo.ID)
+
+	nr.startedNodes = append(nr.startedNodes, *nodeInfo)
+
+	startedNodeCount := len(nr.startedNodes)
+	failedNodeCount := len(nr.failedNodes)
+
+	if (startedNodeCount + failedNodeCount) == nr.config.NodeCount {
+		nr.statusLogger.LogStarted()
+	} else {
+		log.Printf("%d failed %d started\n", failedNodeCount, startedNodeCount)
+	}
+
+	return nil
+}
+
+func (nr *NodeRegistry) NodeFailed(nodeInfo *NodeInfo, reply *int) error {
+
+	nr.mutex.Lock()
+	defer nr.mutex.Unlock()
+
+	log.Printf("node failed %d\n", nodeInfo.ID)
+
+	nr.failedNodes = append(nr.failedNodes, *nodeInfo)
+
+	failedNodeCount := len(nr.failedNodes)
+
+	if failedNodeCount >= 20 {
+		nr.statusLogger.LogFailed()
+		panic(fmt.Errorf("more than 20 nodes failed there must be a problem"))
+	}
+
+	return nil
+}
+
+func (nr *NodeRegistry) NodeFinished(nodeInfo *NodeInfo, reply *int) error {
+
+	nr.mutex.Lock()
+	defer nr.mutex.Unlock()
+
+	log.Printf("node finished %d\n", nodeInfo.ID)
+
+	nr.finishedNodes = append(nr.finishedNodes, *nodeInfo)
+
+	finishedNodeCount := len(nr.finishedNodes)
+	failedNodeCount := len(nr.failedNodes)
+
+	if (finishedNodeCount + failedNodeCount) == nr.config.NodeCount {
+		nr.statusLogger.LogFinished()
+	} else {
+		log.Printf("%d failed %d finished\n", failedNodeCount, finishedNodeCount)
+	}
+
+	return nil
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 func (nr *NodeRegistry) Unregister(remoteAddress string) {
 	addressParts := strings.Split(remoteAddress, ":")

@@ -62,6 +62,13 @@ func main() {
 
 	var nodeList []registery.NodeInfo
 
+	///// Node Failed /////
+	defer func() {
+		if r := recover(); r != nil {
+			registry.NodeFailed()
+		}
+	}()
+
 	for {
 		nodeList = registry.GetNodeList()
 		nodeCount := len(nodeList)
@@ -75,6 +82,9 @@ func main() {
 	peerSet := createPeerSet(nodeList, nodeConfig.GossipFanout, nodeInfo.ID, nodeInfo.IPAddress, nodeConfig.ConnectionCount)
 	statLogger := common.NewStatLogger(nodeInfo.ID)
 	rapidchain := dissemination.NewDisseminator(demux, nodeConfig, peerSet, statLogger)
+
+	///// Node Started /////
+	registry.NodeStarted()
 
 	runConsensus(rapidchain, nodeConfig.EndRound, nodeConfig.RoundSleepTime, nodeInfo.ID, nodeConfig.SourceCount, nodeConfig.MessageSize, nodeList)
 
@@ -90,6 +100,9 @@ func main() {
 	events := statLogger.GetEvents()
 	statList := common.StatList{IPAddress: nodeInfo.IPAddress, PortNumber: nodeInfo.PortNumber, NodeID: nodeInfo.ID, Events: events}
 	registry.UploadStats(statList)
+
+	///// Node Finished /////
+	registry.NodeFinished()
 
 	log.Printf("exiting as expected...\n")
 }

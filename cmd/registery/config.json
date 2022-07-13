@@ -1,7 +1,7 @@
 {
   "NodeCount": 4096,
   "EpochSeed": "AQIDBAU=",
-  "EndRound": 120,
+  "EndRound": 10,
   "RoundSleepTime": 0,
   "GossipFanout": 16,
   "ConnectionCount": 1,

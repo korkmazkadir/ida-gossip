@@ -63,3 +63,27 @@ func (rc RegistryClient) UploadStats(statList common.StatList) {
 		panic(err)
 	}
 }
+
+func (rc RegistryClient) NodeStarted() {
+
+	err := rc.rpcClient.Call("NodeRegistry.NodeStarted", rc.nodeInfo, nil)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (rc RegistryClient) NodeFailed() {
+
+	err := rc.rpcClient.Call("NodeRegistry.NodeFailed", rc.nodeInfo, nil)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (rc RegistryClient) NodeFinished() {
+
+	err := rc.rpcClient.Call("NodeRegistry.NodeFinished", rc.nodeInfo, nil)
+	if err != nil {
+		panic(err)
+	}
+}

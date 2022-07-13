@@ -14,9 +14,16 @@ const configFile = "config.json"
 
 func main() {
 
+	statusLogger := registery.NewStatusLogger()
+	defer func() {
+		if r := recover(); r != nil {
+			statusLogger.LogFailed()
+		}
+	}()
+
 	nodeConfig := readConfigFromFile()
 
-	nodeRegistry := registery.NewNodeRegistry(nodeConfig)
+	nodeRegistry := registery.NewNodeRegistry(nodeConfig, statusLogger)
 
 	err := rpc.Register(nodeRegistry)
 	if err != nil {

@@ -14,7 +14,9 @@ func TestMain(m *testing.M) {
 	// compy from cmd/registry/main.go
 	nodeConfig := nodeConfigTestInstance()
 
-	nodeRegistry := NewNodeRegistry(nodeConfig)
+	statusLogger := NewStatusLogger()
+
+	nodeRegistry := NewNodeRegistry(nodeConfig, statusLogger)
 
 	rpc.Register(nodeRegistry)
 

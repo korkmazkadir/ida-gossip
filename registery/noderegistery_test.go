@@ -15,7 +15,9 @@ func TestRegistry(t *testing.T) {
 		GossipFanout: 16,
 	}
 
-	nodeRegistry := NewNodeRegistry(nodeConfig)
+	statusLogger := NewStatusLogger()
+
+	nodeRegistry := NewNodeRegistry(nodeConfig, statusLogger)
 
 	// test register function
 	nodeInfo := &NodeInfo{IPAddress: "abc", PortNumber: 6349}
