@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/rpc"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -77,16 +78,41 @@ func main() {
 
 	runConsensus(rapidchain, nodeConfig.EndRound, nodeConfig.RoundSleepTime, nodeInfo.ID, nodeConfig.SourceCount, nodeConfig.MessageSize, nodeList)
 
+	log.Printf("reached target round count. Shutting down in 1 minute\n")
+	time.Sleep(1 * time.Minute)
+
+	log.Printf("getting network usage...\n")
+	bandwidthUsage := getBandwidthUsage(processIndex)
+	statLogger.NetworkUsage(-1, bandwidthUsage)
+
 	// collects stats abd uploads to registry
 	log.Printf("uploading stats to the registry\n")
 	events := statLogger.GetEvents()
 	statList := common.StatList{IPAddress: nodeInfo.IPAddress, PortNumber: nodeInfo.PortNumber, NodeID: nodeInfo.ID, Events: events}
 	registry.UploadStats(statList)
 
-	log.Printf("reached target round count. Shutting down in 1 minute\n")
-	time.Sleep(1 * time.Minute)
-
 	log.Printf("exiting as expected...\n")
+}
+
+func getBandwidthUsage(processIndex string) int64 {
+	cmd := exec.Command("/bin/bash", "./get-network-usage.sh", processIndex)
+	output, err := cmd.Output()
+
+	if err != nil {
+		log.Printf("error occured while executing get-network-usage.sh %s\n", err)
+		return 0
+	}
+
+	outputString := strings.TrimSpace(string(output))
+
+	bandwidthUsage, err := strconv.ParseInt(outputString, 10, 64)
+
+	if err != nil {
+		log.Printf("error occured while converting %s to int64 %s\n", outputString, err)
+		return 0
+	}
+
+	return bandwidthUsage
 }
 
 func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localIPAddress string, connectionCount int) network.PeerSet {

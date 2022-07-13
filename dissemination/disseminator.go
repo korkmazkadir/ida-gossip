@@ -54,12 +54,8 @@ func (d *Disseminator) WaitForMessage(round int, electedLeaders []int) ([]common
 	messages, leadersToRemove := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.MessageChunkCount, d.nodeConfig.DataChunkCount, &d.peerSet, d.nodeConfig.SourceCount, d.statLogger, electedLeaders)
 
 	if leadersToRemove != nil {
-		d.peerSet.ResetQueueLengthCounters()
 		return nil, leadersToRemove
 	}
-
-	d.statLogger.AvgQueuLength(round, d.peerSet.GetAvgQueueLength())
-	d.peerSet.ResetQueueLengthCounters()
 
 	var maxElapsedTime int64
 	for i := range messages {

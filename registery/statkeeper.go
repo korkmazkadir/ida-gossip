@@ -87,8 +87,8 @@ func getNodeInfoString(ipAddress string, portNumber int, nodeID int) string {
 
 func getEventString(nodeID int, event common.Event) string {
 
-	if event.Type == common.QueueLength {
-		return fmt.Sprintf("%d\t%d\t%s\t%f\n", nodeID, event.Round, event.Type, event.QueuLength)
+	if event.Type == common.NetworkUsage {
+		return fmt.Sprintf("%d\t%d\t%s\t%d\n", nodeID, event.Round, event.Type, event.NetworkUsage)
 	}
 
 	return fmt.Sprintf("%d\t%d\t%s\t%d\n", nodeID, event.Round, event.Type, event.ElapsedTime)
