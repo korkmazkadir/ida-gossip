@@ -19,3 +19,4 @@ mv ../cmd/registery/registery ./artifacts
 cp ../cmd/registery/config.json ./artifacts
 mv ../cmd/node/node ./artifacts
 cp deploy-nodes.sh ./artifacts
+cp get-network-usage.sh ./artifacts
