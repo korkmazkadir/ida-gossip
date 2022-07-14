@@ -1,7 +1,9 @@
 ---
 # The playbook uploads experiment artifacts to remote machines
 
-- hosts: all
+- hosts: registry
+  any_errors_fatal: true
+
   tasks:
     - name: copy artifacts to the remote server
       copy:

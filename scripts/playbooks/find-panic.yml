@@ -2,6 +2,8 @@
 # The playbook uploads experiment artifacts to remote machines
 
 - hosts: all
+  any_errors_fatal: true
+  
   tasks:
     - name: check if there is panic
       #shell: grep -r "panic" ./ida-gossip/output/

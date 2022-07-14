@@ -2,6 +2,8 @@
 # The playbook install dependencies
 
 - hosts: all
+  any_errors_fatal: true
+  
   tasks:
     - name: Install cgroup-tools (state=present is optional)
       apt:

@@ -32,6 +32,6 @@ func (s *StatusLogger) LogFailed() {
 }
 
 func (s *StatusLogger) LogFinished() {
-	s.file.WriteString("compeleted\n")
+	s.file.WriteString("completed\n")
 	s.file.Sync()
 }

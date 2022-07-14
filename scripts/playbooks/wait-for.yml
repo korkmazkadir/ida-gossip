@@ -1,0 +1,13 @@
+---
+# The playbook waits for a string
+
+- hosts: registry
+  any_errors_fatal: true
+
+  tasks:
+    - name: wait until the string {{str}} is in the file experiment_status.txt before continuing
+      ansible.builtin.wait_for:
+        path: /root/ida-gossip/experiment_status.txt
+        search_regex: "{{str}}"
+        delay: 30
+        timeout: 300

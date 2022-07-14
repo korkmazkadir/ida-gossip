@@ -10,8 +10,10 @@
         path: ~/ida-gossip/stats
         dest: ~/stats.zip
         format: zip
+        remove: yes
 
     - name: Donwloads stats.zip to the Desktop
       fetch:
-        src: ~/stats.zip
-        dest: ~/Desktop
+        src: /root/stats.zip
+        dest: "{{ dest }}"
+        flat: yes

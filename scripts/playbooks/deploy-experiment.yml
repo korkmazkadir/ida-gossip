@@ -2,6 +2,8 @@
 # The playbook uploads experiment artifacts to remote machines
 
 - hosts: registry
+  any_errors_fatal: true
+
   tasks:
     - name: killing registery
       shell: 
@@ -13,6 +15,8 @@
 
 
 - hosts: all
+  any_errors_fatal: true
+
   tasks:
     - name: killing nodes
       shell: 
