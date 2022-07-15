@@ -14,9 +14,15 @@ is_failed(){
     [[ -z "$res" ]] && echo false || echo true
 }
 
-run_with_timeout(){
-    
+
+copy_config_file(){
+    cofig_file_path=$1
+    # removes the old config file
+    rm ./artifacts/config.json 
+    # copies the new config file
+    cp $cofig_file_path ./artifacts/config.json
 }
+
 
 retry_count=10
 retry_delay=10
@@ -71,7 +77,8 @@ deploy_experiment(){
 }
 
 download_stats(){
-    ansible-playbook -i hosts  playbooks/download-stats-to-destination.yml -e dest="../stats/1.zip"
+    # stat_file_path is set in deploy_experiment function
+    ansible-playbook -i hosts  playbooks/download-stats-to-destination.yml -e dest="${stat_file_path}"
 }
 
 wait_for_start(){
@@ -82,27 +89,55 @@ wait_for_end(){
     ansible-playbook -i hosts playbooks/wait-for.yml -e  str="(failed|completed)"
 }
 
-log "installing dependencies..."
-retry install_dependencies
+initialize(){
 
-log "uploading artifacts..."
-retry upload_artifacts
+    echo -e "\n**** Running initialization sequence ****\n"
 
-log "uploading config..."
-retry upload_config
+    log "installing dependencies..."
+    retry install_dependencies
 
-log "deploying experiment..."
-retry deploy_experiment
+    log "uploading artifacts..."
+    retry upload_artifacts
+}
 
-log "waiting for the start of the experiment"
-wait_for_start
+deployment_sequence(){
 
-log "waiting for the end of the experiment"
-wait_for_end
+    experiment_name=$1
 
-log "downloading stats..."
-retry download_stats
+    stat_file_path="../stats/${experiment_name}.zip"
 
+    log "uploading config..."
+    retry upload_config
 
-#brew install coreutils
-#https://stackoverflow.com/a/4581821/2479643
+    log "deploying experiment..."
+    retry deploy_experiment
+
+    # TODO: Handle following /dev/null forwards
+    log "waiting for the start of the experiment"
+    wait_for_start > /dev/null
+
+    log "waiting for the end of the experiment"
+    wait_for_end > /dev/null
+
+    log "downloading stats..."
+    retry download_stats
+
+}
+
+# runs initialization sequence
+initialize
+
+for experiment_config in ./experiments-to-conduct/*.json; do
+
+    experiment_name="$(basename -- $experiment_config .json)"
+
+    echo -e "\n#### Deploying Experiment ${experiment_name} ######\n"
+    
+    copy_config_file $experiment_config
+
+    deployment_sequence $experiment_name
+
+    # done with experiment config, removes it
+    rm $experiment_config
+
+done
