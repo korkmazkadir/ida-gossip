@@ -42,8 +42,8 @@ Page 2 contains the plots, and page 3 contains data used in plots.
 ```{r first_chunk_delivery, echo=FALSE}
 library(ggplot2)
 
-folder_path <- "/home/kadir/Desktop/ida_connection_count_effect/"
-target_variable <- as.name("ConnectionCount")
+folder_path <- "/Users/kadir/Downloads/experiment-1/"
+target_variable <- as.name("MessageSize")
 
 df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
 p1 <- ggplot(df_chunks, aes(x= as.factor(!!target_variable) )) +
@@ -86,13 +86,22 @@ p2 <- ggplot(df_message_delivery, aes(x=as.factor(!!target_variable))) +
 
 ```{r queue_length, echo=FALSE, fig.height=3}
 
-df_queue_length <- read.csv(paste(folder_path, "queue_length_df.tsv", sep = ""), sep = "\t", header = TRUE)
-p3 <- ggplot(df_queue_length, aes(x=as.factor(!!target_variable), y=Mean)) +
-      geom_errorbar(aes(ymin=LowerBound, ymax=UpperBound), width=.3)+
-      geom_point() + 
-      ylab("Mean Queue Length") +  
-      xlab(target_variable) +
-      expand_limits(y = 0) 
+df_network_usage <- read.csv(paste(folder_path, "network_usage_df.tsv", sep = ""), sep = "\t", header = TRUE)
+p3 <- ggplot(df_network_usage, aes(x=as.factor(!!target_variable))) +
+      geom_boxplot(aes(
+        ymin=Min,
+        lower= FirstQuartile,
+        middle=Median,
+        upper=ThirdQuartile,
+        ymax=Max
+      ), stat="identity") + 
+      ylab("Network Usage(Bytes)") + 
+      xlab(target_variable) + 
+      expand_limits(y = 0) +
+      geom_point(aes(y=Mean, color=""))+
+      geom_errorbar(aes( ymin=MeanLowerBound, ymax=MeanUpperBound, color=""), width=.2) +
+      guides(color = FALSE)
+
 
 ```
 
@@ -106,8 +115,7 @@ library(gridExtra)
 #p2 <- p2 + theme(axis.title.x = element_blank()) 
 #p3 <- p3 + theme(axis.title.x = element_blank()) 
 
-#plots <- list( p1, p2, p3 )
-plots <- list( p1, p2)
+plots <- list( p1, p2, p3 )
 grobs <- list()
 widths <- list()
 
@@ -140,8 +148,8 @@ df_message_delivery <- df_message_delivery  %>% select( !!target_variable, Min, 
 kable(df_message_delivery, caption = "Message Delivery Time(ms)")
 
 
-#df_queue_length <- df_queue_length  %>% select( !!target_variable, LowerBound, Mean, UpperBound, RowCount) %>% arrange( !!target_variable )
-#kable(df_queue_length, caption = "Queue Length")
+df_network_usage <- df_network_usage  %>% select( !!target_variable, Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable )
+kable(df_network_usage, caption = "Network Usage")
 
 ```
 
