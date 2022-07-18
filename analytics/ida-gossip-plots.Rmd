@@ -1,0 +1,179 @@
+---
+title: "IDA Gossip Experiment Results"
+author: "Kadir Korkmaz"
+date: "7/18/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Experimental Setup
+4096 process deployed on 32 machines---128 processes per machine---from G5K.
+The bandwidth of each process is capped at 20Mbps(Upload Bandwidth). 
+One-way latency of 15ms added to each communication link(RTT is 30ms).
+
+
+In this set of experiments, we vary the size of messages and chunk counts, and we measure the following metrics:
+
+* First chunk delivery time in milliseconds
+
+* Message delivery time in milliseconds
+
+* Network usage in megabytes 
+
+Each experiment runs for 61 rounds. First chunk delivery and message delivery times are measured once for each node and for each round, therefore
+these metrics measured 4096*61 (number of nodes times number of rounds) per experiment. Network usage is the total data uploaded during an experiment, and it is measured using OS level counters: for each node, network usage is measured once at the end of an experiment, therefore there are 4096 (number of nodes) distinct data points per experiment. The resulting measurements are used to calculate percentiles(%0, %25 %50, %75 and %100). 
+
+
+
+## IDA Gossip Implementation
+We have a fully functional IDA gossip implementation with:
+
+* Erasure coding
+
+* Merkle path authentication
+
+The percent of data chunks and parity chunks are calculated as described in the paper.
+
+
+## Important Notes
+
+* All charts plotted using ***MEDIAN*** values.
+
+* Data used to plot charts are provided at the end of the report in the form of a table.
+
+* Each data table contains the RowCount which is the number of measurements considered to calculate statistics.
+
+* Currently, I am conducting new experiments to fill missing data points.
+
+
+
+
+
+\newpage
+
+```{r first_chunk_delivery, echo=FALSE}
+library(ggplot2)
+
+
+mb_to_bytes<-1048576
+
+folder_path <- "/Users/kadir/Downloads/experiment-1/"
+target_variable <- as.name("MessageSize")
+x_label="Message Size(MB)"
+
+df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
+df_chunks$MessageSize = df_chunks$MessageSize / mb_to_bytes
+
+p1 <- ggplot(df_chunks, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount))) +
+      geom_line()+
+      geom_point()+
+      labs(x=x_label, y="First Chunk Delivery Time(ms)",  color='Chunk Count') +
+      expand_limits(y = 0) + 
+      theme(legend.position="top")
+
+
+
+```
+
+
+```{r message_delivery, echo=FALSE}
+
+df_message_delivery <- read.csv(paste(folder_path, "message_received_df.tsv", sep = ""), sep = "\t", header = TRUE)
+df_message_delivery$MessageSize = df_message_delivery$MessageSize / mb_to_bytes
+
+p2 <- ggplot(df_message_delivery, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount) )) +
+      geom_line()+
+      geom_point()+
+      labs(x=x_label, y="Message Delivery Time(ms)",  color='Chunk Count') +
+      expand_limits(y = 0) +
+      theme(legend.position="top")
+
+
+```
+
+```{r queue_length, echo=FALSE, fig.height=3}
+
+df_network_usage <- read.csv(paste(folder_path, "network_usage_df.tsv", sep = ""), sep = "\t", header = TRUE)
+df_network_usage$MessageSize = df_network_usage$MessageSize / mb_to_bytes
+df_network_usage$Median = df_network_usage$Median / mb_to_bytes
+
+p3 <- ggplot(df_network_usage, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount) )) +
+      geom_line()+
+      geom_point()+
+      labs(x=x_label, y="Network Usage(MB)",  color='Chunk Count') +
+      expand_limits(y = 0) +
+      guides(color = FALSE)
+
+
+```
+
+
+
+```{r allign_plots, echo=FALSE, fig.height=9, fig.width=8}
+
+library(gridExtra)
+
+#p1 <- p1 + theme(axis.title.x = element_blank())
+#p2 <- p2 + theme(axis.title.x = element_blank())
+#p3 <- p3 + theme(axis.title.x = element_blank())
+
+plots <- list( p1, p2, p3 )
+grobs <- list()
+widths <- list()
+
+for (i in 1:length(plots)){
+    grobs[[i]] <- ggplotGrob(plots[[i]])
+    widths[[i]] <- grobs[[i]]$widths[2:5]
+}
+
+maxwidth <- do.call(grid::unit.pmax, widths)
+
+for (i in 1:length(grobs)){
+     grobs[[i]]$widths[2:5] <- as.list(maxwidth)
+}
+
+do.call( "grid.arrange", c(grobs, ncol = 1) )
+
+```
+
+
+\newpage
+```{r, echo=FALSE}
+suppressPackageStartupMessages(library(dplyr))
+library(knitr)
+
+names(df_chunks)[names(df_chunks) == 'MessageChunkCount'] <- "ChunkCount"
+names(df_message_delivery)[names(df_message_delivery) == 'MessageChunkCount'] <- "ChunkCount"
+names(df_network_usage)[names(df_network_usage) == 'MessageChunkCount'] <- "ChunkCount"
+
+df_chunks <- df_chunks %>% select( !!target_variable, ChunkCount, Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
+kable(df_chunks, caption = "First Chunk Delivery Time(ms)")
+
+df_message_delivery <- df_message_delivery  %>% select( !!target_variable, ChunkCount,  Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
+kable(df_message_delivery, caption = "Message Delivery Time(ms)")
+
+```
+
+
+\newpage
+
+```{r, echo=FALSE}
+
+df_network_usage$Min = df_network_usage$Min / mb_to_bytes
+df_network_usage$FirstQuartile = df_network_usage$FirstQuartile / mb_to_bytes
+df_network_usage$ThirdQuartile = df_network_usage$ThirdQuartile / mb_to_bytes
+df_network_usage$Max = df_network_usage$Max / mb_to_bytes
+df_network_usage$Mean = df_network_usage$Mean / mb_to_bytes
+
+
+
+df_network_usage <- df_network_usage  %>% select( !!target_variable, ChunkCount, Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
+kable(df_network_usage, caption = "Network Usage(MB)")
+
+```
+
+
+
