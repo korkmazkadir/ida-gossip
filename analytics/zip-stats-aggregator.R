@@ -22,5 +22,5 @@ directories <- list.dirs(paste(temp_folder, "/stats", sep = ""), full.names = TR
 calculate_datasets(directories)
 
 # remove temp folder
-# unlink(temp_folder, recursive = TRUE)
+unlink(temp_folder, recursive = TRUE)
 
