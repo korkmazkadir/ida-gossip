@@ -54,6 +54,8 @@ func (d *Disseminator) WaitForMessage(round int, electedLeaders []int, timeout i
 	messages, leadersToRemove := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.MessageChunkCount, d.nodeConfig.DataChunkCount, &d.peerSet, d.nodeConfig.SourceCount, d.statLogger, electedLeaders, timeout)
 
 	if leadersToRemove != nil {
+		//TODO: considers single leader
+		d.statLogger.DisseminationFailure(round, leadersToRemove[0])
 		return nil, leadersToRemove
 	}
 

@@ -11,6 +11,7 @@ const (
 	FirstChunkReceived EventType = iota
 	MessageReceived
 	NetworkUsage
+	DisseminationFailure
 )
 
 func (e EventType) String() string {
@@ -21,6 +22,8 @@ func (e EventType) String() string {
 		return "MESSAGE_RECEIVED"
 	case NetworkUsage:
 		return "NETWORK_USAGE"
+	case DisseminationFailure:
+		return "DISSEMINATION_FAILURE"
 	default:
 		panic(fmt.Errorf("undefined enum value %d", e))
 	}
@@ -62,6 +65,11 @@ func (s *StatLogger) MessageReceived(round int, elapsedTime int64) {
 func (s *StatLogger) NetworkUsage(round int, usage int64) {
 	log.Printf("stats\t%d\t%d\t%s\t%d\t", s.nodeID, round, "NETWORK_USAGE", usage)
 	s.events = append(s.events, Event{Round: round, Type: NetworkUsage, NetworkUsage: usage})
+}
+
+func (s *StatLogger) DisseminationFailure(round int, leader int) {
+	log.Printf("stats\t%d\t%d\t%s\t%d\t", s.nodeID, round, "DISSEMINATION_FAILURE", leader)
+	s.events = append(s.events, Event{Round: round, Type: DisseminationFailure, ElapsedTime: leader})
 }
 
 func (s *StatLogger) GetEvents() []Event {
