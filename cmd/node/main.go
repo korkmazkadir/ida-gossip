@@ -65,6 +65,7 @@ func main() {
 	///// Node Failed /////
 	defer func() {
 		if r := recover(); r != nil {
+			log.Println("########### FAILED ############")
 			registry.NodeFailed()
 		}
 	}()
@@ -88,8 +89,8 @@ func main() {
 
 	runConsensus(rapidchain, nodeConfig.EndRound, nodeConfig.RoundSleepTime, nodeInfo.ID, nodeConfig.SourceCount, nodeConfig.MessageSize, nodeList)
 
-	log.Printf("reached target round count. Shutting down in 1 minute\n")
-	time.Sleep(1 * time.Minute)
+	log.Printf("reached target round count. Shutting down in 5 minute\n")
+	time.Sleep(5 * time.Minute)
 
 	log.Printf("getting network usage...\n")
 	bandwidthUsage := getBandwidthUsage(processIndex)
