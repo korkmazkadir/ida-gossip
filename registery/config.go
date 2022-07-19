@@ -25,11 +25,17 @@ type NodeConfig struct {
 	MessageChunkCount int
 
 	DataChunkCount int
+
+	EndOfExperimentSleepTime int
+
+	FaultyNodePercent int
+
+	DisseminationTimeout int
 }
 
 func (nc NodeConfig) Hash() []byte {
 
-	str := fmt.Sprintf("%d,%x,%d,%d,%d,%d,%d,%d,%d", nc.NodeCount, nc.EpochSeed, nc.EndRound, nc.GossipFanout, nc.SourceCount, nc.MessageSize, nc.MessageChunkCount, nc.ConnectionCount, nc.DataChunkCount)
+	str := fmt.Sprintf("%d,%x,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", nc.NodeCount, nc.EpochSeed, nc.EndRound, nc.GossipFanout, nc.SourceCount, nc.MessageSize, nc.MessageChunkCount, nc.ConnectionCount, nc.DataChunkCount, nc.EndOfExperimentSleepTime, nc.FaultyNodePercent, nc.DisseminationTimeout)
 
 	h := sha256.New()
 	_, err := h.Write([]byte(str))
@@ -52,4 +58,7 @@ func (nc *NodeConfig) CopyFields(cp NodeConfig) {
 	nc.MessageSize = cp.MessageSize
 	nc.MessageChunkCount = cp.MessageChunkCount
 	nc.DataChunkCount = cp.DataChunkCount
+	nc.EndOfExperimentSleepTime = cp.EndOfExperimentSleepTime
+	nc.FaultyNodePercent = cp.FaultyNodePercent
+	nc.DisseminationTimeout = cp.DisseminationTimeout
 }

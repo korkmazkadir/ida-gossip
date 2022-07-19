@@ -2,13 +2,14 @@ package dissemination
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/korkmazkadir/ida-gossip/common"
 	"github.com/korkmazkadir/ida-gossip/network"
 )
 
-func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, dataChunkCount int, peerSet *network.PeerSet, leaderCount int, statLogger *common.StatLogger, electedLeaders []int) ([]common.Message, []int) {
+func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, dataChunkCount int, peerSet *network.PeerSet, leaderCount int, statLogger *common.StatLogger, electedLeaders []int, timeout int) ([]common.Message, []int) {
 
 	chunkChan, err := demux.GetMessageChunkChan(round)
 	if err != nil {
@@ -18,8 +19,13 @@ func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, dataC
 	receiver := newBlockReceiver(leaderCount, chunkCount, dataChunkCount)
 	firstChunkReceived := false
 
-	//TODO: get timeout value from config
-	timeOut := time.After(2 * time.Minute)
+	var timeOutChan <-chan time.Time
+
+	// if timeout value is equal or smaller to 0, the chanel will be nil, and
+	// all operations will block forever except close operation that panics
+	if timeout > 0 {
+		timeOutChan = time.After(time.Duration(timeout) * time.Second)
+	}
 
 	chunkReceivedMap := make(map[int]bool)
 	for _, leader := range electedLeaders {
@@ -36,6 +42,12 @@ func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, dataC
 					panic(fmt.Errorf("expected round is %d and chunk from round %d", round, c.Round))
 				}
 
+				//TODO: considers only one leader
+				if c.Issuer != electedLeaders[0] {
+					log.Printf("A chunk is received from previous leader %d, discarding the chunk", c.Issuer)
+					continue
+				}
+
 				// a chunk is received from the leader
 				chunkReceivedMap[c.Issuer] = true
 
@@ -47,19 +59,23 @@ func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, dataC
 				receiver.AddChunk(c)
 				peerSet.ForwardChunk(c)
 			}
-		case <-timeOut:
-			// checks for unresponsive leaders
-			var leadersToRemove []int
-			for leader, value := range chunkReceivedMap {
-				if value == false {
-					leadersToRemove = append(leadersToRemove, leader)
-				}
-			}
+		case <-timeOutChan:
+			// // checks for unresponsive leaders
+			// var leadersToRemove []int
+			// for leader, value := range chunkReceivedMap {
+			// 	if value == false {
+			// 		leadersToRemove = append(leadersToRemove, leader)
+			// 	}
+			// }
 
-			// this means that at least one leader is unresponsive
-			if len(leadersToRemove) > 0 {
-				return nil, leadersToRemove
-			}
+			// // this means that at least one leader is unresponsive
+			// if len(leadersToRemove) > 0 {
+			// 	return nil, leadersToRemove
+			// }
+
+			// WARNING: all leaders are evicted...
+			log.Printf("Dissemination Timeout expired: All leaders considered FAULTY!!!")
+			return nil, electedLeaders
 		}
 
 	}

@@ -87,10 +87,11 @@ func main() {
 	///// Node Started /////
 	registry.NodeStarted()
 
-	runConsensus(rapidchain, nodeConfig.EndRound, nodeConfig.RoundSleepTime, nodeInfo.ID, nodeConfig.SourceCount, nodeConfig.MessageSize, nodeList)
+	runConsensus(rapidchain, nodeConfig.EndRound, nodeConfig.RoundSleepTime, nodeInfo.ID, nodeConfig.SourceCount, nodeConfig.MessageSize, nodeList, nodeConfig.DisseminationTimeout)
 
-	log.Printf("reached target round count. Shutting down in 5 minute\n")
-	time.Sleep(5 * time.Minute)
+	sleepTime := time.Duration(nodeConfig.EndOfExperimentSleepTime) * time.Second
+	log.Printf("Reached target round count. Shutting down in %s\n", sleepTime)
+	time.Sleep(sleepTime)
 
 	log.Printf("getting network usage...\n")
 	bandwidthUsage := getBandwidthUsage(processIndex)
@@ -175,7 +176,7 @@ func getNodeInfo(netAddress string) registery.NodeInfo {
 	return registery.NodeInfo{IPAddress: ipAddress, PortNumber: portNumber}
 }
 
-func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleepTime int, nodeID int, leaderCount int, blockSize int, nodeList []registery.NodeInfo) {
+func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleepTime int, nodeID int, leaderCount int, blockSize int, nodeList []registery.NodeInfo, timeout int) {
 
 	currentRound := 1
 	for currentRound <= numberOfRounds {
@@ -196,7 +197,7 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 		// TODO: is it better to log individual messages?
 		// waits to deliver the block
 		log.Printf("waiting to deliver messages...\n")
-		messages, unresponsiveLeaders := rc.WaitForMessage(currentRound, electedLeaders)
+		messages, unresponsiveLeaders := rc.WaitForMessage(currentRound, electedLeaders, timeout)
 
 		if unresponsiveLeaders != nil {
 			log.Printf("Unresponsive leader detected: %v\n", unresponsiveLeaders)

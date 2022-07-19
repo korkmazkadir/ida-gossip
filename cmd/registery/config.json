@@ -1,5 +1,5 @@
 {
-  "NodeCount": 4096,
+  "NodeCount": 512,
   "EpochSeed": "AQIDBAU=",
   "EndRound": 10,
   "RoundSleepTime": 0,
@@ -8,5 +8,8 @@
   "SourceCount" : 1,
   "MessageSize": 2097152,
   "MessageChunkCount": 128,
-  "DataChunkCount": 48
+  "DataChunkCount": 48,
+  "EndOfExperimentSleepTime": 600,
+  "FaultyNodePercent": 0,
+  "DisseminationTimeout": 0
 }

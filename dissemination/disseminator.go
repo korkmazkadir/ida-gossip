@@ -46,12 +46,12 @@ func (d *Disseminator) SubmitMessage(round int, message common.Message) {
 	//return d.WaitForMessage(round)
 }
 
-func (d *Disseminator) WaitForMessage(round int, electedLeaders []int) ([]common.Message, []int) {
+func (d *Disseminator) WaitForMessage(round int, electedLeaders []int, timeout int) ([]common.Message, []int) {
 
 	// sets the round for demultiplexer
 	d.demultiplexer.UpdateRound(round)
 
-	messages, leadersToRemove := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.MessageChunkCount, d.nodeConfig.DataChunkCount, &d.peerSet, d.nodeConfig.SourceCount, d.statLogger, electedLeaders)
+	messages, leadersToRemove := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.MessageChunkCount, d.nodeConfig.DataChunkCount, &d.peerSet, d.nodeConfig.SourceCount, d.statLogger, electedLeaders, timeout)
 
 	if leadersToRemove != nil {
 		return nil, leadersToRemove
