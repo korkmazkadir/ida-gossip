@@ -3,9 +3,11 @@ package registery
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/korkmazkadir/ida-gossip/common"
 )
@@ -32,11 +34,22 @@ type NodeRegistry struct {
 	config       NodeConfig
 	statKeeper   *StatKeeper
 	statusLogger *StatusLogger
+	nodeIDs      []int
 }
 
 func NewNodeRegistry(config NodeConfig, statusLogger *StatusLogger) *NodeRegistry {
 
-	return &NodeRegistry{config: config, statusLogger: statusLogger}
+	var nodeIDList []int
+	for i := 1; i <= config.NodeCount; i++ {
+		nodeIDList = append(nodeIDList, i)
+	}
+	// Shuffles node id list
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(nodeIDList), func(i, j int) {
+		nodeIDList[i], nodeIDList[j] = nodeIDList[j], nodeIDList[i]
+	})
+
+	return &NodeRegistry{config: config, statusLogger: statusLogger, nodeIDs: nodeIDList}
 }
 
 // Register registers a node with specific node info
@@ -46,7 +59,10 @@ func (nr *NodeRegistry) Register(nodeInfo *NodeInfo, reply *NodeInfo) error {
 	defer nr.mutex.Unlock()
 
 	// assigns a node ID. smallest node ID is 1
-	nodeID := len(nr.registeredNodes) + 1
+	// nodeID := len(nr.registeredNodes) + 1
+
+	// assigns a random node ID. smallest node ID is 1
+	nodeID := nr.nodeIDs[len(nr.registeredNodes)]
 	nodeInfo.ID = nodeID
 
 	nr.registeredNodes = append(nr.registeredNodes, *nodeInfo)
@@ -91,8 +107,9 @@ func (nr *NodeRegistry) NodeFailed(nodeInfo *NodeInfo, reply *int) error {
 	nr.failedNodes = append(nr.failedNodes, *nodeInfo)
 
 	failedNodeCount := len(nr.failedNodes)
+	faultyNodeCount := common.FaultyNodeCount(nr.config.NodeCount, nr.config.FaultyNodePercent)
 
-	if failedNodeCount >= 20 {
+	if failedNodeCount-faultyNodeCount >= 20 {
 		nr.statusLogger.LogFailed()
 		panic(fmt.Errorf("more than 20 nodes failed there must be a problem"))
 	}

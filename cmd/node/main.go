@@ -62,6 +62,12 @@ func main() {
 
 	var nodeList []registery.NodeInfo
 
+	isNodeFaulty := common.IsFaulty(nodeConfig.NodeCount, nodeConfig.FaultyNodePercent, nodeInfo.ID)
+	if isNodeFaulty {
+		log.Printf("Node Faulty. Node ID %d\n", nodeInfo.ID)
+		server.SetAsFaulty()
+	}
+
 	///// Node Failed /////
 	defer func() {
 		if r := recover(); r != nil {
@@ -83,6 +89,14 @@ func main() {
 	peerSet := createPeerSet(nodeList, nodeConfig.GossipFanout, nodeInfo.ID, nodeInfo.IPAddress, nodeConfig.ConnectionCount)
 	statLogger := common.NewStatLogger(nodeInfo.ID)
 	rapidchain := dissemination.NewDisseminator(demux, nodeConfig, peerSet, statLogger)
+
+	if isNodeFaulty {
+		registry.NodeFailed()
+		log.Println("Node will sleep forever. The main gorutine will block.")
+		//https://stackoverflow.com/a/36419222/2479643
+		//receiving from a nil channel blocks the main thread
+		<-(chan int)(nil)
+	}
 
 	///// Node Started /////
 	registry.NodeStarted()

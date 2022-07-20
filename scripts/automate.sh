@@ -4,7 +4,8 @@
 export ANSIBLE_STDOUT_CALLBACK=json 
 
 log(){
-    echo -e $1 >&2
+    time_str=$(date +'%d/%m/%Y %H:%M:%S')
+    echo -e "${time_str} ${1}" >&2
 }
 
 is_failed(){
@@ -125,7 +126,7 @@ deployment_sequence(){
 }
 
 # runs initialization sequence
-initialize
+# initialize
 
 for experiment_config in ./experiments-to-conduct/*.json; do
 
