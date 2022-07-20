@@ -54,13 +54,24 @@ func (d *Demux) EnqueBlockChunk(chunk Chunk) {
 	chunkChan := d.getCorrespondingBlockChunkChan(chunkRound)
 	chunkChan <- chunk
 
-	// updates the queue length
-	lengthChan := len(chunkChan)
-	if lengthChan == 0 {
-		lengthChan = 1
+	d.markAsProcessed(chunkRound, chunkHash)
+}
+
+func (d *Demux) ReEnqueChunks(chunks []Chunk, round int) {
+
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
+	chunkChan := d.getCorrespondingBlockChunkChan(round)
+
+	for i := range chunks {
+		if chunks[i].Round < d.currentRound {
+			panic(fmt.Errorf("wrong round %d != %d", round, chunks[i].Round))
+		}
+
+		chunkChan <- chunks[i]
 	}
 
-	d.markAsProcessed(chunkRound, chunkHash)
 }
 
 // GetVoteBlockChunkChan returns Blockchunk channel

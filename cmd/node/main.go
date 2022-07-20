@@ -193,9 +193,10 @@ func getNodeInfo(netAddress string) registery.NodeInfo {
 func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleepTime int, nodeID int, leaderCount int, blockSize int, nodeList []registery.NodeInfo, timeout int) {
 
 	currentRound := 1
+	step := 1
 	for currentRound <= numberOfRounds {
 
-		log.Printf("+++++++++ Round %d +++++++++++++++\n", currentRound)
+		log.Printf("+++++++++ Round %d Step[%d] +++++++++++++++\n", currentRound, step)
 
 		var messages []common.Message
 
@@ -211,12 +212,16 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 		// TODO: is it better to log individual messages?
 		// waits to deliver the block
 		log.Printf("waiting to deliver messages...\n")
-		messages, unresponsiveLeaders := rc.WaitForMessage(currentRound, electedLeaders, timeout)
+
+		// each time the timeout violated nodes will wait longer
+		messages, unresponsiveLeaders := rc.WaitForMessage(currentRound, electedLeaders, timeout*step)
 
 		if unresponsiveLeaders != nil {
 			log.Printf("Unresponsive leader detected: %v\n", unresponsiveLeaders)
 			nodeList = removeUnresponsiveLeaders(unresponsiveLeaders, nodeList)
 			log.Printf("Unresponsive leaders are removed.")
+			// increments the step
+			step++
 			continue
 		}
 
@@ -230,14 +235,14 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 		log.Printf("round finished, payload size payload size: %d bytes\n", payloadSize)
 
 		currentRound++
+		step = 1
 
-		sleepTime := int64(roundSleepTime*1000) - (time.Now().UnixMilli() - messages[0].Time)
-		log.Printf("sleeping for %d ms\n", sleepTime)
-		time.Sleep(time.Duration(sleepTime) * time.Millisecond)
-
-		//sleepTime := time.Duration(roundSleepTime) * time.Second
-		//log.Printf("sleeping for %s\n", sleepTime)
-		//time.Sleep(sleepTime)
+		// sleep at the end of the round
+		if roundSleepTime > 0 {
+			sleepTime := int64(roundSleepTime*1000) - (time.Now().UnixMilli() - messages[0].Time)
+			log.Printf("sleeping for %d ms\n", sleepTime)
+			time.Sleep(time.Duration(sleepTime) * time.Millisecond)
+		}
 
 	}
 

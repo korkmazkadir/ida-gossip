@@ -32,6 +32,8 @@ func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, dataC
 		chunkReceivedMap[leader] = false
 	}
 
+	var extraChunksReceived []common.Chunk
+
 	for !receiver.ReceivedAll() {
 
 		select {
@@ -44,7 +46,8 @@ func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, dataC
 
 				//TODO: considers only one leader
 				if c.Issuer != electedLeaders[0] {
-					log.Printf("A chunk is received from previous leader %d, discarding the chunk", c.Issuer)
+					//log.Printf("A chunk is received from previous leader %d, discarding the chunk", c.Issuer)
+					extraChunksReceived = append(extraChunksReceived, c)
 					continue
 				}
 
@@ -73,11 +76,21 @@ func receiveMultipleBlocks(round int, demux *common.Demux, chunkCount int, dataC
 			// 	return nil, leadersToRemove
 			// }
 
+			//it enques all unprocessed chunks in case of timeout
+			if len(extraChunksReceived) > 0 {
+				demux.ReEnqueChunks(extraChunksReceived, round)
+				log.Printf("Enqueued %d chunks to reprocess\n", len(extraChunksReceived))
+			}
+
 			// WARNING: all leaders are evicted...
 			log.Printf("Dissemination Timeout expired: All leaders considered FAULTY!!!")
 			return nil, electedLeaders
 		}
 
+	}
+
+	for i := range extraChunksReceived {
+		log.Printf("Chunk will be discarted: Round: %d Sender: %d\n", extraChunksReceived[i].Round, extraChunksReceived[i].Issuer)
 	}
 
 	return receiver.GetBlocks(), nil
