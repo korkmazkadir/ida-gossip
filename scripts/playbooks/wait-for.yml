@@ -9,5 +9,5 @@
       ansible.builtin.wait_for:
         path: /root/ida-gossip/experiment_status.txt
         search_regex: "{{str}}"
-        delay: 60
+        #delay: 60
         timeout: 300000

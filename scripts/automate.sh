@@ -3,6 +3,8 @@
 #export ANSIBLE_CALLBACK_WHITELIST=json
 export ANSIBLE_STDOUT_CALLBACK=json 
 
+fork_count=10
+
 log(){
     time_str=$(date +'%d/%m/%Y %H:%M:%S')
     echo -e "${time_str} ${1}" >&2
@@ -62,11 +64,11 @@ retry(){
 }
 
 install_dependencies(){
-    ansible-playbook -i hosts playbooks/install-dependencies.yml
+    ansible-playbook -f $fork_count -i hosts playbooks/install-dependencies.yml
 }
 
 upload_artifacts(){
-    ansible-playbook -i hosts playbooks/upload-artifacts.yml
+    ansible-playbook -f $fork_count -i hosts playbooks/upload-artifacts.yml
 }
 
 upload_config(){
@@ -74,7 +76,7 @@ upload_config(){
 }
 
 deploy_experiment(){
-    ansible-playbook -i hosts playbooks/deploy-experiment.yml
+    ansible-playbook -f $fork_count -i hosts playbooks/deploy-experiment.yml
 }
 
 download_stats(){
@@ -120,13 +122,15 @@ deployment_sequence(){
     log "waiting for the end of the experiment"
     wait_for_end > /dev/null
 
-    log "downloading stats..."
-    retry download_stats
+    #log "downloading stats..."
+    #retry download_stats
 
 }
 
 # runs initialization sequence
-# initialize
+#initialize
+
+batch_size=5
 
 for experiment_config in ./experiments-to-conduct/*.json; do
 
@@ -136,7 +140,13 @@ for experiment_config in ./experiments-to-conduct/*.json; do
     
     copy_config_file $experiment_config
 
-    deployment_sequence $experiment_name
+    for batch_index in $(seq $batch_size); do
+        log "---> Batch [${batch_index}] <---"
+        deployment_sequence $experiment_name
+    done
+
+    log "downloading stats..."
+    retry download_stats
 
     # done with experiment config, removes it
     rm $experiment_config

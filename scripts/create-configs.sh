@@ -1,16 +1,16 @@
 #!/bin/bash
 
 #message_sizes=(1 2 4 8 12 16 20) #in megabytes
-message_sizes=(2) #in megabytes
-fault_percents=(5 10 15 20 25 30) #in megabytes
-megabyte_in_bytes=1048576 #in bytes
+message_sizes=(20) #in megabytes
+#fault_percents=(5 10 15 20 25 30) #in megabytes
+fault_percents=(0) #in megabytes
 
 
 template_config="./template-config.json"
 
 chunk_count=$(cat $template_config | jq ".MessageChunkCount")
 
-#faulty_node_percent=$(cat $template_config | jq ".FaultyNodePercent")
+megabyte_in_bytes=1048576 #in bytes
 
 file_index=1
 for size in ${message_sizes[@]}; do
