@@ -1,7 +1,7 @@
 ---
 title: "IDA Gossip Experiment Results"
 author: "Kadir Korkmaz"
-date: "7/18/2022"
+date: "7/22/2022"
 output: pdf_document
 ---
 
@@ -23,9 +23,8 @@ In this set of experiments, we vary the size of messages and chunk counts, and w
 
 * Network usage in megabytes 
 
-Each experiment runs for 61 rounds. First chunk delivery and message delivery times are measured once for each node and for each round, therefore
-these metrics measured 4096*61 (number of nodes times number of rounds) per experiment. Network usage is the total data uploaded during an experiment, and it is measured using OS level counters: for each node, network usage is measured once at the end of an experiment, therefore there are 4096 (number of nodes) distinct data points per experiment. The resulting measurements are used to calculate percentiles(%0, %25 %50, %75 and %100). 
-
+Each experiment run for 5 times. First chunk delivery and message delivery times are measured once for each node and for each round, therefore
+these metrics measured 4096*5 (number of nodes times number of rounds) per experiment. Network usage is the total data uploaded during an experiment, and it is measured using OS level counters: for each node, network usage is measured once at the end of an experiment. The resulting measurements are used to calculate percentiles(%0, %25 %50, %75 and %100).
 
 
 ## IDA Gossip Implementation
@@ -46,11 +45,7 @@ The percent of data chunks and parity chunks are calculated as described in the 
 
 * Each data table contains the RowCount which is the number of measurements considered to calculate statistics.
 
-* Currently, I am conducting new experiments to fill missing data points.
-
-
-
-
+* All results of an experiment (from 5 different run) combined to calculate statistics.
 
 \newpage
 
@@ -60,7 +55,7 @@ library(ggplot2)
 
 mb_to_bytes<-1048576
 
-folder_path <- "/Users/kadir/Downloads/experiment-1/"
+folder_path <- "/Users/kadir/Downloads/experiment-1-5Rounds/"
 target_variable <- as.name("MessageSize")
 x_label="Message Size(MB)"
 
@@ -151,6 +146,11 @@ names(df_network_usage)[names(df_network_usage) == 'MessageChunkCount'] <- "Chun
 
 df_chunks <- df_chunks %>% select( !!target_variable, ChunkCount, Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
 kable(df_chunks, caption = "First Chunk Delivery Time(ms)")
+
+```
+
+\newpage
+```{r, echo=FALSE}
 
 df_message_delivery <- df_message_delivery  %>% select( !!target_variable, ChunkCount,  Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
 kable(df_message_delivery, caption = "Message Delivery Time(ms)")
