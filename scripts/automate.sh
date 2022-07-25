@@ -85,7 +85,7 @@ download_stats(){
 }
 
 wait_for_start(){
-    ansible-playbook -i hosts playbooks/wait-for.yml -e  str="(started)"
+    ansible-playbook -i hosts playbooks/wait-for.yml -e  str="(started|failed|completed)"
 }
 
 wait_for_end(){

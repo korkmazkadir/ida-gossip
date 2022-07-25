@@ -9,9 +9,14 @@
       shell: 
         cmd: pkill registery || /bin/true
 
+    - name: remove old stats.zip from home
+      shell: 
+        cmd: rm -f ~/stats.zip
+
     - name: deploying registery service
       shell: cd ~/ida-gossip; nohup ./registery > registery.log 2>&1 &
 
+    
 
 
 - hosts: all
