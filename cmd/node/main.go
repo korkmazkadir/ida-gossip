@@ -101,7 +101,7 @@ func main() {
 	///// Node Started /////
 	registry.NodeStarted()
 
-	runConsensus(rapidchain, nodeConfig.EndRound, nodeConfig.RoundSleepTime, nodeInfo.ID, nodeConfig.SourceCount, nodeConfig.MessageSize, nodeList, nodeConfig.DisseminationTimeout)
+	runConsensus(rapidchain, nodeConfig, nodeInfo.ID, nodeList)
 
 	sleepTime := time.Duration(nodeConfig.EndOfExperimentSleepTime) * time.Second
 	log.Printf("Reached target round count. Shutting down in %s\n", sleepTime)
@@ -137,7 +137,7 @@ func getBandwidthUsage(processIndex string) int64 {
 	bandwidthUsage, err := strconv.ParseInt(outputString, 10, 64)
 
 	if err != nil {
-		log.Printf("error occured while converting %s to int64 %s\n", outputString, err)
+		log.Printf("error occurred while converting %s to int64 %s\n", outputString, err)
 		return 0
 	}
 
@@ -190,11 +190,13 @@ func getNodeInfo(netAddress string) registery.NodeInfo {
 	return registery.NodeInfo{IPAddress: ipAddress, PortNumber: portNumber}
 }
 
-func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleepTime int, nodeID int, leaderCount int, blockSize int, nodeList []registery.NodeInfo, timeout int) {
+func runConsensus(rc *dissemination.Disseminator, nodeConfig registery.NodeConfig, nodeID int, nodeList []registery.NodeInfo) {
 
+	leaderCount := nodeConfig.SourceCount
+	timeout := nodeConfig.DisseminationTimeout
 	currentRound := 1
 	step := 1
-	for currentRound <= numberOfRounds {
+	for currentRound <= nodeConfig.EndRound {
 
 		log.Printf("+++++++++ Round %d Step[%d] +++++++++++++++\n", currentRound, step)
 
@@ -203,9 +205,16 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 		// if elected as a leader submits a block
 		isElected, electedLeaders := isElectedAsLeader(nodeList, currentRound, nodeID, leaderCount)
 
+		// if a leader is faulty remove it from the leader list
+		for common.IsFaulty(nodeConfig.NodeCount, nodeConfig.FaultyNodePercent, electedLeaders[0]) {
+			log.Printf("A faulty node is elected as leader. Removing it...")
+			nodeList = removeUnresponsiveLeaders(electedLeaders, nodeList)
+			isElected, electedLeaders = isElectedAsLeader(nodeList, currentRound, nodeID, leaderCount)
+		}
+
 		if isElected {
 			log.Println("elected as leader")
-			b := createBlock(currentRound, nodeID, blockSize, leaderCount)
+			b := createBlock(currentRound, nodeID, nodeConfig.MessageSize, leaderCount)
 			rc.SubmitMessage(currentRound, b)
 		}
 
@@ -238,8 +247,8 @@ func runConsensus(rc *dissemination.Disseminator, numberOfRounds int, roundSleep
 		step = 1
 
 		// sleep at the end of the round
-		if roundSleepTime > 0 {
-			sleepTime := int64(roundSleepTime*1000) - (time.Now().UnixMilli() - messages[0].Time)
+		if nodeConfig.RoundSleepTime > 0 {
+			sleepTime := int64(nodeConfig.RoundSleepTime*1000) - (time.Now().UnixMilli() - messages[0].Time)
 			log.Printf("sleeping for %d ms\n", sleepTime)
 			time.Sleep(time.Duration(sleepTime) * time.Millisecond)
 		}
