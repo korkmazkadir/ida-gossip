@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -35,6 +36,8 @@ type NodeRegistry struct {
 	statKeeper   *StatKeeper
 	statusLogger *StatusLogger
 	nodeIDs      []int
+
+	once sync.Once
 }
 
 func NewNodeRegistry(config NodeConfig, statusLogger *StatusLogger) *NodeRegistry {
@@ -124,6 +127,13 @@ func (nr *NodeRegistry) NodeFinished(nodeInfo *NodeInfo, reply *int) error {
 
 	log.Printf("node finished %d\n", nodeInfo.ID)
 
+	// auto close in 60 seconds
+	if nr.config.FaultyNodePercent > 0 {
+		nr.once.Do(func() {
+			go nr.CountDownToClose()
+		})
+	}
+
 	nr.finishedNodes = append(nr.finishedNodes, *nodeInfo)
 
 	finishedNodeCount := len(nr.finishedNodes)
@@ -212,4 +222,14 @@ func (nr *NodeRegistry) UploadStats(stats *common.StatList, reply *int) error {
 	nr.statKeeper.SaveStats(*stats)
 
 	return nil
+}
+
+func (nr *NodeRegistry) CountDownToClose() {
+	log.Println("===> Will close automatically in 60 seconds <===")
+	time.Sleep(60 * time.Second)
+	nr.mutex.Lock()
+	defer nr.mutex.Unlock()
+
+	nr.statusLogger.LogFinished()
+	os.Exit(0)
 }
