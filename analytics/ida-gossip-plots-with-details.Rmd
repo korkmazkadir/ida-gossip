@@ -1,0 +1,137 @@
+---
+title: "IDA Gossip Experiment Results"
+author: "Kadir Korkmaz"
+date: "7/22/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+fahrenheit_to_celsius <- function(temp_F) {
+  temp_C <- (temp_F - 32) * 5 / 9
+  return(temp_C)
+}
+
+```
+
+\newpage
+```{r first_chunk_delivery, echo=FALSE}
+library(ggplot2)
+
+
+mb_to_bytes<-1048576
+
+folder_path <- "~/Downloads/ida-gossip-1-normal-case/"
+target_variable <- as.name("MessageSize")
+x_label="Message Size(MB)"
+
+
+
+df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
+df_chunks$MessageSize = df_chunks$MessageSize / mb_to_bytes
+
+ggplot(df_chunks, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount))) +
+      geom_line()+
+      geom_point()+
+      labs(x=x_label, y="First Chunk Delivery Time(ms)",  color='Chunk Count') +
+      expand_limits(y = 0) + 
+      theme(legend.position="top")
+
+
+```
+
+
+```{r message_delivery, echo=FALSE}
+
+df_message_delivery <- read.csv(paste(folder_path, "message_received_df.tsv", sep = ""), sep = "\t", header = TRUE)
+df_message_delivery$MessageSize = df_message_delivery$MessageSize / mb_to_bytes
+
+ggplot(df_message_delivery, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount) )) +
+      geom_line()+
+      geom_point()+
+      labs(x=x_label, y="Message Delivery Time(ms)",  color='Chunk Count') +
+      expand_limits(y = 0) +
+      theme(legend.position="top")
+
+
+```
+
+
+
+
+```{r, echo=FALSE,results='asis'}
+library(dplyr)
+
+x_variable <- as.name("MessageChunkCount")
+x_label<-"Chunk Count"
+
+values <- df_chunks %>% distinct(!!target_variable) %>% arrange(!!target_variable)
+
+
+for (i in unlist(values) ) {
+
+    cat("\n\n\\newpage\n##",target_variable," ", i," -- First Chunk Delivery","\n\n\n")
+
+    df <- df_chunks %>% filter(!!target_variable == i)
+
+    
+    p<- ggplot(df, aes(x= as.factor(!!x_variable))) +
+      geom_boxplot(aes(
+      lower = FirstQuartile,
+      upper = ThirdQuartile,
+      middle =Median,
+      ymin = Min,
+      ymax = Max),
+      stat = "identity") +
+      labs(x=x_label, y="First Chunk Time(ms)",  color='Chunk Count') +
+      expand_limits(y = 0) +
+      theme(legend.position="top")
+
+    print(p)
+
+}
+
+
+```
+
+```{r, echo=FALSE,results='asis'}
+library(dplyr)
+
+x_variable <- as.name("MessageChunkCount")
+x_label<-"Chunk Count"
+
+values <- df_message_delivery %>% distinct(!!target_variable) %>% arrange(!!target_variable)
+
+
+for (i in unlist(values) ) {
+
+    cat("\n\n\\newpage\n##",target_variable," ", i," -- Message Delivery Time","\n\n\n")
+
+    df <- df_message_delivery %>% filter(!!target_variable == i)
+
+    
+    p<- ggplot(df, aes(x= as.factor(!!x_variable))) +
+      geom_boxplot(aes(
+      lower = FirstQuartile,
+      upper = ThirdQuartile,
+      middle =Median,
+      ymin = Min,
+      ymax = Max),
+      stat = "identity") +
+      labs(x=x_label, y="Messag Delivery Time(ms)",  color='Chunk Count') +
+      expand_limits(y = 0) +
+      theme(legend.position="top")
+
+    print(p)
+
+}
+
+
+```
+
+
+
+
+
+
