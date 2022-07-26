@@ -1,5 +1,23 @@
 #!/bin/bash
 
+run_init=false
+
+#https://linuxconfig.org/bash-script-flags-usage-with-arguments-examples
+while getopts 'i' OPTION; do
+  case "$OPTION" in
+    i)
+      echo "will do necessary installations..."
+      run_init=true
+      ;;
+    ?)
+      echo "script usage: $(basename \$0) [-i]" >&2
+      exit 1
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+
 #export ANSIBLE_CALLBACK_WHITELIST=json
 export ANSIBLE_STDOUT_CALLBACK=json 
 
@@ -127,8 +145,12 @@ deployment_sequence(){
 
 }
 
-# runs initialization sequence
-#initialize
+
+if [ "$run_init" = "true" ]; then
+    # runs initialization sequence
+    initialize
+fi 
+
 
 batch_size=5
 
