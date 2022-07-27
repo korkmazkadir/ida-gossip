@@ -9,7 +9,8 @@ import (
 var NoCorrectPeerAvailable = errors.New("there are no correct peers available")
 
 type PeerSet struct {
-	peers []*P2PClient
+	peers    []*P2PClient
+	isFaulty bool
 }
 
 func (p *PeerSet) AddPeer(IPAddress string, portNumber int, connectionCount int) error {
@@ -29,6 +30,10 @@ func (p *PeerSet) AddPeer(IPAddress string, portNumber int, connectionCount int)
 
 func (p *PeerSet) DissaminateChunks(chunks []common.Chunk) {
 
+	if p.isFaulty {
+		return
+	}
+
 	for index, chunk := range chunks {
 		peer := p.selectPeer(index)
 		peer.SendBlockChunk(chunk)
@@ -36,6 +41,10 @@ func (p *PeerSet) DissaminateChunks(chunks []common.Chunk) {
 }
 
 func (p *PeerSet) ForwardChunk(chunk common.Chunk) {
+
+	if p.isFaulty {
+		return
+	}
 
 	forwardCount := 0
 	for _, peer := range p.peers {
@@ -62,4 +71,8 @@ func (p *PeerSet) selectPeer(index int) *P2PClient {
 	}
 
 	panic(NoCorrectPeerAvailable)
+}
+
+func (p *PeerSet) SetFaulty() {
+	p.isFaulty = true
 }
