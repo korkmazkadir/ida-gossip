@@ -101,6 +101,10 @@ func main() {
 
 	log.Printf("getting network usage...\n")
 	bandwidthUsage := getBandwidthUsage(processIndex)
+
+	if isNodeFaulty {
+		bandwidthUsage = 0
+	}
 	statLogger.NetworkUsage(-1, bandwidthUsage)
 
 	// collects stats abd uploads to registry
