@@ -15,11 +15,11 @@ var ErrBlockNotValid = errors.New("received block is not valid")
 type Disseminator struct {
 	demultiplexer *common.Demux
 	nodeConfig    registery.NodeConfig
-	peerSet       network.PeerSet
+	peerSet       *network.PeerSet
 	statLogger    *common.StatLogger
 }
 
-func NewDisseminator(demux *common.Demux, config registery.NodeConfig, peerSet network.PeerSet, statLogger *common.StatLogger) *Disseminator {
+func NewDisseminator(demux *common.Demux, config registery.NodeConfig, peerSet *network.PeerSet, statLogger *common.StatLogger) *Disseminator {
 
 	d := &Disseminator{
 		demultiplexer: demux,
@@ -51,7 +51,7 @@ func (d *Disseminator) WaitForMessage(round int, electedLeaders []int, timeout i
 	// sets the round for demultiplexer
 	d.demultiplexer.UpdateRound(round)
 
-	messages, leadersToRemove := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.MessageChunkCount, d.nodeConfig.DataChunkCount, &d.peerSet, d.nodeConfig.SourceCount, d.statLogger, electedLeaders, timeout)
+	messages, leadersToRemove := receiveMultipleBlocks(round, d.demultiplexer, d.nodeConfig.MessageChunkCount, d.nodeConfig.DataChunkCount, d.peerSet, d.nodeConfig.SourceCount, d.statLogger, electedLeaders, timeout)
 
 	if leadersToRemove != nil {
 		//TODO: considers single leader

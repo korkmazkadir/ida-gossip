@@ -136,7 +136,7 @@ func getBandwidthUsage(processIndex string) int64 {
 	return bandwidthUsage
 }
 
-func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localIPAddress string, connectionCount int) network.PeerSet {
+func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localIPAddress string, connectionCount int) *network.PeerSet {
 
 	var copyNodeList []registery.NodeInfo
 	copyNodeList = append(copyNodeList, nodeList...)
@@ -144,7 +144,7 @@ func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localI
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(copyNodeList), func(i, j int) { copyNodeList[i], copyNodeList[j] = copyNodeList[j], copyNodeList[i] })
 
-	peerSet := network.PeerSet{}
+	peerSet := &network.PeerSet{}
 
 	peerCount := 0
 	for i := 0; i < len(copyNodeList); i++ {
