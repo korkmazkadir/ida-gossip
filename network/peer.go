@@ -10,7 +10,13 @@ var NoCorrectPeerAvailable = errors.New("there are no correct peers available")
 
 type PeerSet struct {
 	peers    []*P2PClient
+	jobChan  chan job
 	isFaulty bool
+}
+
+func NewPeerSet() *PeerSet {
+	p := &PeerSet{jobChan: make(chan job, 1024)}
+	return p
 }
 
 func (p *PeerSet) AddPeer(IPAddress string, portNumber int, connectionCount int) error {
@@ -19,9 +25,6 @@ func (p *PeerSet) AddPeer(IPAddress string, portNumber int, connectionCount int)
 	if err != nil {
 		return err
 	}
-
-	// starts the main loop of client
-	go client.Start()
 
 	p.peers = append(p.peers, client)
 
@@ -36,7 +39,8 @@ func (p *PeerSet) DissaminateChunks(chunks []common.Chunk) {
 
 	for index, chunk := range chunks {
 		peer := p.selectPeer(index)
-		peer.SendBlockChunk(chunk)
+		j := job{chunk: chunk, peer: peer}
+		p.jobChan <- j
 	}
 }
 
@@ -46,18 +50,8 @@ func (p *PeerSet) ForwardChunk(chunk common.Chunk) {
 		return
 	}
 
-	forwardCount := 0
-	for _, peer := range p.peers {
-		if peer.err != nil {
-			continue
-		}
-		forwardCount++
-		peer.SendBlockChunk(chunk)
-	}
-
-	if forwardCount == 0 {
-		panic(NoCorrectPeerAvailable)
-	}
+	j := job{chunk: chunk}
+	p.jobChan <- j
 }
 
 func (p *PeerSet) selectPeer(index int) *P2PClient {
@@ -75,4 +69,30 @@ func (p *PeerSet) selectPeer(index int) *P2PClient {
 
 func (p *PeerSet) SetFaulty() {
 	p.isFaulty = true
+}
+
+type job struct {
+	chunk common.Chunk
+	peer  *P2PClient
+}
+
+func (p *PeerSet) MainLoop() {
+
+	for {
+
+		j := <-p.jobChan
+
+		if j.peer != nil {
+			j.peer.SendBlockChunk(j.chunk)
+			continue
+		}
+
+		for _, peer := range p.peers {
+			// if it can not send, it panics
+			// no need to check for errors
+			peer.SendBlockChunk(j.chunk)
+		}
+
+	}
+
 }

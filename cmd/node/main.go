@@ -84,6 +84,11 @@ func main() {
 	statLogger := common.NewStatLogger(nodeInfo.ID)
 	rapidchain := dissemination.NewDisseminator(demux, nodeConfig, peerSet, statLogger)
 
+	go func() {
+		log.Println("Main loop of PeerSet started...")
+		peerSet.MainLoop()
+	}()
+
 	isNodeFaulty := common.IsFaulty(nodeConfig.NodeCount, nodeConfig.FaultyNodePercent, nodeInfo.ID)
 	if isNodeFaulty {
 		log.Printf("Node Faulty. Node ID %d\n", nodeInfo.ID)
@@ -148,7 +153,7 @@ func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localI
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(copyNodeList), func(i, j int) { copyNodeList[i], copyNodeList[j] = copyNodeList[j], copyNodeList[i] })
 
-	peerSet := &network.PeerSet{}
+	peerSet := network.NewPeerSet()
 
 	peerCount := 0
 	for i := 0; i < len(copyNodeList); i++ {
