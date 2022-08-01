@@ -78,6 +78,8 @@ type job struct {
 
 func (p *PeerSet) MainLoop() {
 
+	var sem = make(chan int, 4)
+
 	for {
 
 		j := <-p.jobChan
@@ -90,7 +92,13 @@ func (p *PeerSet) MainLoop() {
 		for _, peer := range p.peers {
 			// if it can not send, it panics
 			// no need to check for errors
-			peer.SendBlockChunk(j.chunk)
+
+			sem <- 1
+			go func(peer *P2PClient) {
+				peer.SendBlockChunk(j.chunk)
+				<-sem
+			}(peer)
+
 		}
 
 	}
