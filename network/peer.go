@@ -85,7 +85,13 @@ func (p *PeerSet) MainLoop() {
 		j := <-p.jobChan
 
 		if j.peer != nil {
-			j.peer.SendBlockChunk(j.chunk)
+
+			sem <- 1
+			go func() {
+				j.peer.SendBlockChunk(j.chunk)
+				<-sem
+			}()
+
 			continue
 		}
 
