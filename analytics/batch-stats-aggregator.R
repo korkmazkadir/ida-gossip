@@ -86,6 +86,35 @@ create_network_usage_df <- function(config, stats_df) {
   return(result_df)
 }
 
+create_send_time_df <- function(config, stats_df) {
+  result_df <- as.data.frame(config)
+  df <- stats_df %>% filter(Event == "MEAN_SEND_TIME")
+  
+  # TODO: is it a good way to solve the problem
+  # int overflow problem 
+  df$Value <- as.numeric(df$Value)
+  
+  typeof(df$Value)
+  
+  stats <- boxplot.stats(df$Value)$stats
+  
+  mean <- mean(df$Value)
+  ci <- confidence_interval(df)
+  
+  result_df["Min"] <- c(stats[1])
+  result_df["FirstQuartile"] <- c(stats[2])
+  result_df["Median"] <- c(stats[3])
+  result_df["ThirdQuartile"] <- c(stats[4])
+  result_df["Max"] <- c(stats[5])
+  result_df["RowCount"] <- c( nrow(df) )
+  result_df["MeanLowerBound"] <- mean - ci
+  result_df["Mean"] <- mean
+  result_df["MeanUpperBound"] <- mean + ci
+  
+  return(result_df)
+}
+
+
 
 # iterates over directories
 calculate_datasets <- function(directories) {
@@ -94,6 +123,7 @@ calculate_datasets <- function(directories) {
   first_chunk_delivery_df <- data.frame(matrix(ncol = 13, nrow = 0))
   message_received_df <- data.frame(matrix(ncol = 11, nrow = 0))
   network_usage_df <- data.frame(matrix(ncol = 11, nrow = 0))
+  send_time_df <- data.frame(matrix(ncol = 11, nrow = 0))
 
   stats <- data.frame(matrix(ncol = 4, nrow = 0))
 
@@ -129,7 +159,11 @@ calculate_datasets <- function(directories) {
     df <- create_network_usage_df(config, stats)
     network_usage_df <- rbind(network_usage_df, df)
 
-
+    # queue size
+    df <- create_send_time_df(config, stats)
+    send_time_df <- rbind(send_time_df, df)
+    
+    
   print(file.exists("/first_chunk_delivery_df.tsv"))
 
   # write data frames
@@ -137,6 +171,7 @@ calculate_datasets <- function(directories) {
   path_chunk <- paste(path, "/first_chunk_delivery_df.tsv", sep = "")
   path_message <- paste(path, "/message_received_df.tsv", sep = "")
   path_network <- paste(path, "/network_usage_df.tsv", sep = "")
+  path_send_time <- paste(path, "/send_time_df.tsv", sep = "")
 
   write.table(first_chunk_delivery_df, file = path_chunk, quote = FALSE, sep = "\t", col.names = !file.exists(path_chunk), row.names = FALSE, append = TRUE)
 
@@ -144,6 +179,9 @@ calculate_datasets <- function(directories) {
 
   write.table(network_usage_df, file = path_network, quote = FALSE, sep = "\t", col.names = !file.exists(path_network), row.names = FALSE, append = TRUE)
 
+  write.table(send_time_df, file = path_send_time, quote = FALSE, sep = "\t", col.names = !file.exists(path_send_time), row.names = FALSE, append = TRUE)
+  
+  
 }
 
 #path <- "/home/kadir/Desktop/ida_connection_count_effect"

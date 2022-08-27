@@ -12,6 +12,7 @@ const (
 	MessageReceived
 	NetworkUsage
 	DisseminationFailure
+	MeanSendTime
 )
 
 func (e EventType) String() string {
@@ -24,6 +25,8 @@ func (e EventType) String() string {
 		return "NETWORK_USAGE"
 	case DisseminationFailure:
 		return "DISSEMINATION_FAILURE"
+	case MeanSendTime:
+		return "MEAN_SEND_TIME"
 	default:
 		panic(fmt.Errorf("undefined enum value %d", e))
 	}
@@ -34,6 +37,7 @@ type Event struct {
 	Type         EventType
 	ElapsedTime  int
 	NetworkUsage int64
+	MeanSendTime float64
 }
 
 type StatList struct {
@@ -70,6 +74,11 @@ func (s *StatLogger) NetworkUsage(round int, usage int64) {
 func (s *StatLogger) DisseminationFailure(round int, leader int) {
 	log.Printf("stats\t%d\t%d\t%s\t%d\t", s.nodeID, round, "DISSEMINATION_FAILURE", leader)
 	s.events = append(s.events, Event{Round: round, Type: DisseminationFailure, ElapsedTime: leader})
+}
+
+func (s *StatLogger) MeanSendTime(round int, time float64) {
+	log.Printf("stats\t%d\t%d\t%s\t%f\t", s.nodeID, round, "MEAN_SEND_TIME", time)
+	s.events = append(s.events, Event{Round: round, Type: MeanSendTime, MeanSendTime: time})
 }
 
 func (s *StatLogger) GetEvents() []Event {

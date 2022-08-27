@@ -31,11 +31,13 @@ type NodeConfig struct {
 	FaultyNodePercent int
 
 	DisseminationTimeout int
+
+	ConcurrentSendCount int
 }
 
 func (nc NodeConfig) Hash() []byte {
 
-	str := fmt.Sprintf("%d,%x,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", nc.NodeCount, nc.EpochSeed, nc.EndRound, nc.GossipFanout, nc.SourceCount, nc.MessageSize, nc.MessageChunkCount, nc.ConnectionCount, nc.DataChunkCount, nc.EndOfExperimentSleepTime, nc.FaultyNodePercent, nc.DisseminationTimeout)
+	str := fmt.Sprintf("%d,%x,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", nc.NodeCount, nc.EpochSeed, nc.EndRound, nc.GossipFanout, nc.SourceCount, nc.MessageSize, nc.MessageChunkCount, nc.ConnectionCount, nc.DataChunkCount, nc.EndOfExperimentSleepTime, nc.FaultyNodePercent, nc.DisseminationTimeout, nc.ConcurrentSendCount)
 
 	h := sha256.New()
 	_, err := h.Write([]byte(str))
@@ -61,4 +63,5 @@ func (nc *NodeConfig) CopyFields(cp NodeConfig) {
 	nc.EndOfExperimentSleepTime = cp.EndOfExperimentSleepTime
 	nc.FaultyNodePercent = cp.FaultyNodePercent
 	nc.DisseminationTimeout = cp.DisseminationTimeout
+	nc.ConcurrentSendCount = cp.ConcurrentSendCount
 }

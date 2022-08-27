@@ -89,6 +89,8 @@ func getEventString(nodeID int, event common.Event) string {
 
 	if event.Type == common.NetworkUsage {
 		return fmt.Sprintf("%d\t%d\t%s\t%d\n", nodeID, event.Round, event.Type, event.NetworkUsage)
+	} else if event.Type == common.MeanSendTime {
+		return fmt.Sprintf("%d\t%d\t%s\t%f\n", nodeID, event.Round, event.Type, event.MeanSendTime)
 	}
 
 	return fmt.Sprintf("%d\t%d\t%s\t%d\n", nodeID, event.Round, event.Type, event.ElapsedTime)

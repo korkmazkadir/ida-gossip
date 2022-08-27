@@ -2,20 +2,65 @@ package network
 
 import (
 	"errors"
+	"math"
+	"sync"
+	"time"
 
 	"github.com/korkmazkadir/ida-gossip/common"
 )
 
 var NoCorrectPeerAvailable = errors.New("there are no correct peers available")
 
-type PeerSet struct {
-	peers    []*P2PClient
-	jobChan  chan job
-	isFaulty bool
+type sendStats struct {
+	mutex sync.Mutex
+	stats []int64
 }
 
-func NewPeerSet() *PeerSet {
-	p := &PeerSet{jobChan: make(chan job, 1024)}
+func (s *sendStats) append(stat int64) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.stats = append(s.stats, stat)
+}
+
+func (s *sendStats) summary() (min int64, mean float64, max int64) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	min = math.MaxInt64
+
+	var sum int64
+	for _, value := range s.stats {
+
+		sum += value
+		if value < min {
+			min = value
+		}
+
+		if value > max {
+			max = value
+		}
+	}
+
+	mean = float64(sum) / float64(len(s.stats))
+
+	return
+}
+
+type PeerSet struct {
+	peers               []*P2PClient
+	jobChan             chan job
+	isFaulty            bool
+	concurrentSendCount int
+	stats               *sendStats
+}
+
+func NewPeerSet(concurrentSendCount int) *PeerSet {
+	p := &PeerSet{
+		jobChan:             make(chan job, 1024),
+		concurrentSendCount: concurrentSendCount,
+		stats:               &sendStats{},
+	}
 	return p
 }
 
@@ -78,7 +123,7 @@ type job struct {
 
 func (p *PeerSet) MainLoop() {
 
-	var sem = make(chan int, 4)
+	var sem = make(chan int, p.concurrentSendCount)
 
 	for {
 
@@ -88,8 +133,10 @@ func (p *PeerSet) MainLoop() {
 
 			sem <- 1
 			go func() {
+				start := time.Now()
 				j.peer.SendBlockChunk(j.chunk)
 				<-sem
+				p.stats.append(time.Since(start).Milliseconds())
 			}()
 
 			continue
@@ -101,12 +148,19 @@ func (p *PeerSet) MainLoop() {
 
 			sem <- 1
 			go func(peer *P2PClient) {
+				start := time.Now()
 				peer.SendBlockChunk(j.chunk)
 				<-sem
+				p.stats.append(time.Since(start).Milliseconds())
 			}(peer)
 
 		}
 
 	}
 
+}
+
+func (p *PeerSet) SendStats() (int64, float64, int64) {
+
+	return p.stats.summary()
 }

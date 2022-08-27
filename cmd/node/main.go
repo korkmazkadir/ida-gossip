@@ -80,7 +80,7 @@ func main() {
 		log.Printf("received node list %d/%d\n", nodeCount, nodeConfig.NodeCount)
 	}
 
-	peerSet := createPeerSet(nodeList, nodeConfig.GossipFanout, nodeInfo.ID, nodeInfo.IPAddress, nodeConfig.ConnectionCount)
+	peerSet := createPeerSet(nodeList, nodeConfig.GossipFanout, nodeInfo.ID, nodeInfo.IPAddress, nodeConfig.ConnectionCount, nodeConfig.ConcurrentSendCount)
 	statLogger := common.NewStatLogger(nodeInfo.ID)
 	rapidchain := dissemination.NewDisseminator(demux, nodeConfig, peerSet, statLogger)
 
@@ -103,6 +103,10 @@ func main() {
 	sleepTime := time.Duration(nodeConfig.EndOfExperimentSleepTime) * time.Second
 	log.Printf("Reached target round count. Shutting down in %s\n", sleepTime)
 	time.Sleep(sleepTime)
+
+	minSendTime, meanSendTime, maxSendTime := peerSet.SendStats()
+	log.Printf("[%d] Send Stats ===> min: %d mean: %f max: %d\n", nodeConfig.ConcurrentSendCount, minSendTime, meanSendTime, maxSendTime)
+	statLogger.MeanSendTime(-1, meanSendTime)
 
 	log.Printf("getting network usage...\n")
 	bandwidthUsage := getBandwidthUsage(processIndex)
@@ -145,7 +149,7 @@ func getBandwidthUsage(processIndex string) int64 {
 	return bandwidthUsage
 }
 
-func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localIPAddress string, connectionCount int) *network.PeerSet {
+func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localIPAddress string, connectionCount int, concurrentSendCount int) *network.PeerSet {
 
 	var copyNodeList []registery.NodeInfo
 	copyNodeList = append(copyNodeList, nodeList...)
@@ -153,7 +157,11 @@ func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localI
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(copyNodeList), func(i, j int) { copyNodeList[i], copyNodeList[j] = copyNodeList[j], copyNodeList[i] })
 
-	peerSet := network.NewPeerSet()
+	if concurrentSendCount <= 0 {
+		panic(fmt.Errorf("illegal ConcurrentSendCount %d", concurrentSendCount))
+	}
+
+	peerSet := network.NewPeerSet(concurrentSendCount)
 
 	peerCount := 0
 	for i := 0; i < len(copyNodeList); i++ {
