@@ -2,6 +2,7 @@ package network
 
 import (
 	"errors"
+	"log"
 
 	"github.com/korkmazkadir/ida-gossip/common"
 )
@@ -10,7 +11,15 @@ var NoCorrectPeerAvailable = errors.New("there are no correct peers available")
 
 type PeerSet struct {
 	peers    []*P2PClient
+	fanout   int
 	isFaulty bool
+}
+
+func NewPeerSet(fanout int) *PeerSet {
+
+	p := &PeerSet{fanout: fanout}
+	log.Printf("PeerSet created. Fanout is %d\n", fanout)
+	return p
 }
 
 func (p *PeerSet) AddPeer(IPAddress string, portNumber int, connectionCount int) error {
@@ -51,8 +60,15 @@ func (p *PeerSet) ForwardChunk(chunk common.Chunk) {
 		if peer.err != nil {
 			continue
 		}
-		forwardCount++
+
 		peer.SendBlockChunk(chunk)
+		forwardCount++
+
+		if forwardCount == p.fanout {
+			// the message is forwarded fanout times so break here
+			break
+		}
+
 	}
 
 	if forwardCount == 0 {

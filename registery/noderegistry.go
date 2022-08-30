@@ -128,11 +128,12 @@ func (nr *NodeRegistry) NodeFinished(nodeInfo *NodeInfo, reply *int) error {
 	log.Printf("node finished %d\n", nodeInfo.ID)
 
 	// auto close in 60 seconds
-	if nr.config.FaultyNodePercent > 0 {
-		nr.once.Do(func() {
-			go nr.CountDownToClose()
-		})
-	}
+	//if nr.config.FaultyNodePercent > 0 {
+	// TODO: The behavior is changed, be careful!
+	nr.once.Do(func() {
+		go nr.CountDownToClose()
+	})
+	//}
 
 	nr.finishedNodes = append(nr.finishedNodes, *nodeInfo)
 

@@ -148,12 +148,14 @@ func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localI
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(copyNodeList), func(i, j int) { copyNodeList[i], copyNodeList[j] = copyNodeList[j], copyNodeList[i] })
 
-	peerSet := &network.PeerSet{}
+	peerSet := network.NewPeerSet(fanOut)
 
+	log.Printf(">> Electing 16 peers\n")
 	peerCount := 0
 	for i := 0; i < len(copyNodeList); i++ {
 
-		if peerCount == fanOut {
+		//TODO: we are electing 16 peers but fanout has a different meaning now!!!
+		if peerCount == 16 {
 			break
 		}
 
@@ -167,8 +169,9 @@ func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localI
 		if err != nil {
 			panic(err)
 		}
-		log.Printf("new peer added: %s:%d ID %d\n", peer.IPAddress, peer.PortNumber, peer.ID)
+
 		peerCount++
+		log.Printf("[%d] New peer added: %s:%d ID %d\n", peerCount, peer.IPAddress, peer.PortNumber, peer.ID)
 	}
 
 	return peerSet
