@@ -1,22 +1,40 @@
 #!/bin/bash
 
+#run_init=false
+#https://linuxconfig.org/bash-script-flags-usage-with-arguments-examples
+#while getopts 'i' OPTION; do
+#  case "$OPTION" in
+#    i)
+#      echo "will do necessary installations..."
+#      run_init=true
+#      ;;
+#    
+#    ?)
+#      echo "script usage: $(basename \$0) [-i]" >&2
+#      exit 1
+#      ;;
+#  esac
+#done
+#shift "$(($OPTIND -1))"
+
+batch_size=0
 run_init=false
 
-#https://linuxconfig.org/bash-script-flags-usage-with-arguments-examples
-while getopts 'i' OPTION; do
-  case "$OPTION" in
-    i)
-      echo "will do necessary installations..."
-      run_init=true
-      ;;
-    ?)
-      echo "script usage: $(basename \$0) [-i]" >&2
-      exit 1
-      ;;
+print_usage() {
+  printf "script usage: $(basename \$0) [-i][-b {batch_count}]" >&2
+}
+
+#https://stackoverflow.com/a/21128172/2479643
+while getopts 'ib:v' flag; do
+  case "${flag}" in
+    i) run_init=true ;;
+    b) batch_size="${OPTARG}" ;;
+    *) print_usage
+       exit 1 ;;
   esac
 done
-shift "$(($OPTIND -1))"
 
+echo ">>> Batch Size: $batch_size"
 
 #export ANSIBLE_CALLBACK_WHITELIST=json
 export ANSIBLE_STDOUT_CALLBACK=json 
@@ -152,7 +170,8 @@ if [ "$run_init" = "true" ]; then
 fi 
 
 
-batch_size=5
+
+
 
 for experiment_config in ./experiments-to-conduct/*.json; do
 
@@ -163,8 +182,17 @@ for experiment_config in ./experiments-to-conduct/*.json; do
     copy_config_file $experiment_config
 
     for batch_index in $(seq $batch_size); do
-        log "---> Batch [${batch_index}] <---"
+
+        start_time="$(date -u +%s)"
+        
+        log "---> Batch [${batch_index}/${batch_size}] <---"
         deployment_sequence $experiment_name
+
+        end_time="$(date -u +%s)"
+
+        elapsed="$(($end_time-$start_time))"
+        log "total of $elapsed seconds elapsed."
+
     done
 
     log "downloading stats..."

@@ -99,12 +99,17 @@ calculate_datasets <- function(directories) {
 
   config <- data.frame()
 
+  experiment_count <- length(directories) - 1 # -1 because there id a top layer directory other than expeirment folders
+  out <- paste0("Experiment count ", experiment_count)  # Some output
+  print(out)
+  
+  
   for (directory in directories) {
     config_file <- paste(directory, "/config.json", sep = "")
     if (file.exists(config_file) == FALSE) {
       next
     }
-
+    
     print(directory)
 
     stats_file <- paste(directory, "/stats.log", sep = "")
@@ -114,7 +119,10 @@ calculate_datasets <- function(directories) {
     stats <- rbind(stats, run_stats)
 
   }
-
+  
+  
+    config$ExperimentCount <- experiment_count
+  
     colnames(stats) <- c("NodeID", "Round", "Event", "Value")
 
     # first chunk delivery

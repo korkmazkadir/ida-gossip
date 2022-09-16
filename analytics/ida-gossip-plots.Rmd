@@ -51,16 +51,25 @@ The percent of data chunks and parity chunks are calculated as described in the 
 
 ```{r first_chunk_delivery, echo=FALSE}
 library(ggplot2)
+library(dplyr)
 
 
 mb_to_bytes<-1048576
 
-folder_path <- "/Users/kadir/Downloads/experiment-1-5Rounds/"
+#folder_path <- "/home/kadir/Desktop/ida-experiments-nomal-case/"
+
+folder_path <- "/home/kadir/Desktop/ida-gossip-experiments/nomal-case-fault-free/"
+
 target_variable <- as.name("MessageSize")
-x_label="Message Size(MB)"
+x_label="Message Size, MB"
 
 df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
 df_chunks$MessageSize = df_chunks$MessageSize / mb_to_bytes
+
+
+df_chunks <- df_chunks %>% filter(MessageChunkCount>=16 )
+
+#df_chunks_classic <- df_chunks %>% filter(MessageChunkCount==1)
 
 p1 <- ggplot(df_chunks, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount))) +
       geom_line()+
@@ -79,6 +88,8 @@ p1 <- ggplot(df_chunks, aes(x= as.factor(!!target_variable), y=Median, group=Mes
 df_message_delivery <- read.csv(paste(folder_path, "message_received_df.tsv", sep = ""), sep = "\t", header = TRUE)
 df_message_delivery$MessageSize = df_message_delivery$MessageSize / mb_to_bytes
 
+df_message_delivery <- df_message_delivery %>% filter(MessageChunkCount>=16)
+
 p2 <- ggplot(df_message_delivery, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount) )) +
       geom_line()+
       geom_point()+
@@ -94,6 +105,8 @@ p2 <- ggplot(df_message_delivery, aes(x= as.factor(!!target_variable), y=Median,
 df_network_usage <- read.csv(paste(folder_path, "network_usage_df.tsv", sep = ""), sep = "\t", header = TRUE)
 df_network_usage$MessageSize = df_network_usage$MessageSize / mb_to_bytes
 df_network_usage$Median = df_network_usage$Median / mb_to_bytes
+
+df_network_usage <- df_network_usage %>% filter(MessageChunkCount>=16)
 
 p3 <- ggplot(df_network_usage, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount) )) +
       geom_line()+
@@ -175,5 +188,105 @@ kable(df_network_usage, caption = "Network Usage(MB)")
 
 ```
 
+
+
+\newpage
+```{r, echo=FALSE, fig.height=6, fig.width=4}
+
+#https://waterdata.usgs.gov/blog/beyond-basic-plotting/
+
+names(df_chunks)[names(df_chunks) == 'MessageChunkCount'] <- "ChunkCount"
+names(df_message_delivery)[names(df_message_delivery) == 'MessageChunkCount'] <- "ChunkCount"
+names(df_network_usage)[names(df_network_usage) == 'MessageChunkCount'] <- "ChunkCount"
+
+#FirstQuartile ThirdQuartile
+
+df_chunks <- df_chunks %>% select( !!target_variable, ChunkCount, Median,FirstQuartile,ThirdQuartile) %>% rename( ChunkDelivery = Median)
+df_message_delivery <- df_message_delivery  %>% select( !!target_variable, ChunkCount, Median,FirstQuartile,ThirdQuartile) %>% rename( MessageDelivery = Median)
+df_network_usage <- df_network_usage  %>% select( !!target_variable, ChunkCount, Median,FirstQuartile,ThirdQuartile) %>% rename( NetworkUsage = Median)
+
+
+
+library(reshape)
+
+df_chunks.melted <- melt(df_chunks, id=c("MessageSize","ChunkCount", "FirstQuartile", "ThirdQuartile"))
+df_message_delivery.melted <- melt(df_message_delivery, id=c("MessageSize","ChunkCount", "FirstQuartile", "ThirdQuartile"))
+df_network_usage.melted <- melt(df_network_usage, id=c("MessageSize","ChunkCount", "FirstQuartile", "ThirdQuartile"))
+ 
+merged_df <- rbind( df_chunks.melted, df_message_delivery.melted )
+merged_df <- rbind( merged_df, df_network_usage.melted )
+
+p <- ggplot(merged_df, aes(x= as.factor(!!target_variable), y=value,  group=ChunkCount, color=as.factor(ChunkCount), linetype=as.factor(ChunkCount), shape=as.factor(ChunkCount) )) +
+      geom_line()+
+      geom_point()+
+      geom_errorbar( aes(ymin=FirstQuartile, ymax=ThirdQuartile), width=0.1, alpha=1, size=0.2)+
+      #expand_limits(y = 0) +
+      labs(color='Chunk Count', shape='Chunk Count', linetype='Chunk Count') +
+      theme_bw()+
+      theme(legend.position="top") +
+      ylab(NULL) +
+      xlab(x_label) +
+      theme(strip.background = element_blank(), # remove the background
+          strip.placement = "outside", legend.title=element_text(size=8), legend.margin=margin(0,-0,-6,0))
+
+#, switch = "y"
+p <- p + facet_grid(variable ~ ., scales = "free_y" , labeller = as_labeller(
+      c(ChunkDelivery = "First Chunk Delivery, ms", MessageDelivery = "Message Delivery, ms", NetworkUsage = "Uploaded Data, MB"))
+  ) + theme(plot.margin = margin(0,0,0,0, "cm")) #+ scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
+
+p
+
+ggsave("fault-free.pdf", p)
+
+
+```
+
+
+\newpage
+```{r, include=FALSE, echo=FALSE, fig.height=6, fig.width=4}
+
+#https://waterdata.usgs.gov/blog/beyond-basic-plotting/
+# 
+# names(df_chunks)[names(df_chunks) == 'MessageChunkCount'] <- "ChunkCount"
+# names(df_message_delivery)[names(df_message_delivery) == 'MessageChunkCount'] <- "ChunkCount"
+# names(df_network_usage)[names(df_network_usage) == 'MessageChunkCount'] <- "ChunkCount"
+# 
+# 
+# 
+# df_chunks <- df_chunks %>% select( !!target_variable, ChunkCount, Median) %>% rename( ChunkDelivery = Median)
+# df_message_delivery <- df_message_delivery  %>% select( !!target_variable, ChunkCount, Median) %>% rename( MessageDelivery = Median)
+# df_network_usage <- df_network_usage  %>% select( !!target_variable, ChunkCount, Median) %>% rename( NetworkUsage = Median)
+# 
+# merged_df <- merge( df_chunks, df_message_delivery )
+# merged_df <- merge( merged_df, df_network_usage )
+# 
+# library(reshape)
+# melted_df <- melt(merged_df, id=c("MessageSize","ChunkCount"))
+# 
+# kable(melted_df)
+# 
+# p <- ggplot(melted_df, aes(x= as.factor(!!target_variable), y=value,  group=ChunkCount, color=as.factor(ChunkCount), linetype=as.factor(ChunkCount), shape=as.factor(ChunkCount) )) +
+#       geom_line()+
+#       geom_point()+
+#       #expand_limits(y = 0) +
+#       labs(color='Chunk Count', shape='Chunk Count', linetype='Chunk Count') +
+#       theme_bw()+
+#       theme(legend.position="top") +
+#       ylab(NULL) +
+#       xlab(x_label) +
+#       theme(strip.background = element_blank(), # remove the background
+#           strip.placement = "outside", legend.title=element_text(size=8), legend.margin=margin(0,-0,-6,0))
+# 
+# #, switch = "y"
+# p <- p + facet_grid(variable ~ ., scales = "free_y" , labeller = as_labeller(
+#       c(ChunkDelivery = "First Chunk Delivery, ms", MessageDelivery = "Message Delivery, ms", NetworkUsage = "Uploaded Data, MB"))
+#   ) + theme(plot.margin = margin(0,0,0,0, "cm")) #+ scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
+# 
+# p
+# 
+# ggsave("fault-free.pdf", p)
+# 
+
+```
 
 

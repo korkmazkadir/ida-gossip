@@ -55,15 +55,15 @@ library(ggplot2)
 
 mb_to_bytes<-1048576
 
-folder_path <- "//home/kadir/Desktop/ida-gossip-experiments-faults-injected/"
+folder_path <- "/home/kadir/Desktop/ida-gossip/scripts/stats/"
 
 ### MessageSize
 #target_variable <- as.name("MessageSize")
 #x_label="Message Size(MB)"
 
 ### FaultyNodePercent
-target_variable <- as.name("FaultyNodePercent")
-x_label="Faulty Node Percent"
+target_variable <- as.name("GossipFanout")
+x_label="Gossip Fanout"
 
 
 df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
@@ -110,6 +110,7 @@ df_delivery_percent <- data.frame(df_message_delivery)
 
 df_delivery_percent$DeliveryPercent <- (df_message_delivery$RowCount/df_message_delivery$ExperimentCount) * 100 / df_message_delivery$NodeCount
 
+
 p3 <- ggplot(df_delivery_percent, aes(x= as.factor(!!target_variable), y=DeliveryPercent, group=MessageChunkCount, color=as.factor(MessageChunkCount), linetype=as.factor(MessageChunkCount), shape=as.factor(MessageChunkCount) )) +
       geom_line()+
       geom_point()+
@@ -155,11 +156,11 @@ p3 <- p3 + theme(legend.position="none")
 # }
 
 #g<-plot_grid(p1, p2, p3, align = "v", nrow = 3, rel_heights = c(2, 2, 2))
-g<-plot_grid(p1, p2, p3,align = "v", nrow = 3) 
+g<-plot_grid(p1, p2, p3,align = "v", nrow = 3)
 
 g
 
-#ggsave("faults.pdf", g)
+ggsave("faults.pdf", g)
 
 ```
 
@@ -199,6 +200,7 @@ kable(df_delivery_percent, caption = "Message Delivery Percent")
 
 ```
 
+
 \newpage
 ```{r, echo=FALSE, fig.height=6, fig.width=4}
 
@@ -212,19 +214,19 @@ merged_df <- merge( df_chunks, df_message_delivery )
 merged_df <- merge( merged_df, df_delivery_percent )
 
 library(reshape)
-melted_df <- melt(merged_df, id=c("FaultyNodePercent","ChunkCount"))
+melted_df <- melt(merged_df, id=c("GossipFanout","ChunkCount"))
 
 kable(melted_df)
 
 p <- ggplot(melted_df, aes(x= as.factor(!!target_variable), y=value,  group=ChunkCount, color=as.factor(ChunkCount), linetype=as.factor(ChunkCount), shape=as.factor(ChunkCount) )) +
       geom_line()+
       geom_point()+
-      expand_limits(y = 0) +
+      #expand_limits(y = 0) +
       labs(color='Chunk Count', shape='Chunk Count', linetype='Chunk Count') +
       theme_bw()+
       theme(legend.position="top") +
       ylab(NULL) +
-      xlab("Faulty Node Percent") +
+      xlab("Fanout") +
       theme(strip.background = element_blank(), # remove the background
           strip.placement = "outside", legend.title=element_text(size=8), legend.margin=margin(0,-0,-6,0))
 
@@ -235,8 +237,7 @@ p <- p + facet_grid(variable ~ ., scales = "free_y" , labeller = as_labeller(
 
 p
 
-
-ggsave("faults.pdf", p)
+ggsave("fanout.pdf", p)
 
 
 ```

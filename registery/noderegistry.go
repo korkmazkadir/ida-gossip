@@ -226,8 +226,9 @@ func (nr *NodeRegistry) UploadStats(stats *common.StatList, reply *int) error {
 }
 
 func (nr *NodeRegistry) CountDownToClose() {
-	log.Println("===> Will close automatically in 60 seconds <===")
-	time.Sleep(60 * time.Second)
+	d := time.Duration(nr.config.EndOfExperimentSleepTime+5) * time.Second
+	log.Printf("===> Will close automatically in %s <===\n", d)
+	time.Sleep(d)
 	nr.mutex.Lock()
 	defer nr.mutex.Unlock()
 
