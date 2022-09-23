@@ -3,17 +3,18 @@
 
 - hosts: registry
   any_errors_fatal: true
+  gather_facts: False
 
   tasks:
-    - name: killing registery
-      shell: 
-        cmd: pkill registery || /bin/true
+    #- name: killing registery
+    #  shell: 
+    #    cmd: pkill registery || /bin/true
 
-    - name: remove old stats.zip from home
+    - name: killing registery, remove old stats.zip from home
       shell: 
-        cmd: rm -f ~/stats.zip
+        cmd: rm -f ~/stats.zip; pkill registery || /bin/true 
 
-    - name: deploying registery service
+    - name: killing registery, remove old stats.zip, deploy registery service
       shell: cd ~/ida-gossip; nohup ./registery > registery.log 2>&1 &
 
     
@@ -21,11 +22,12 @@
 
 - hosts: all
   any_errors_fatal: true
+  gather_facts: False
 
   tasks:
-    - name: killing nodes
-      shell: 
-        cmd: pkill node || /bin/true
+    #- name: killing nodes
+    #  shell: 
+    #    cmd: pkill node || /bin/true
 
     - name: deploying nodes
-      shell: cd ~/ida-gossip; ./deploy-nodes.sh 128 "{{ groups['registry'][0] }}:1234" eno1
+      shell: cd ~/ida-gossip; nohup ./deploy-nodes.sh 128 "{{ groups['registry'][0] }}:1234" eno1 &

@@ -3,6 +3,7 @@
 
 - hosts: all
   any_errors_fatal: true
+  gather_facts: False
   
   tasks:
     - name: Install cgroup-tools (state=present is optional)

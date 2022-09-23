@@ -3,6 +3,7 @@
 
 - hosts: registry
   any_errors_fatal: true
+  gather_facts: False
 
   tasks:
     - name: wait until the string {{str}} is in the file experiment_status.txt before continuing

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#killing all nodes
+#https://unix.stackexchange.com/questions/94220/script-ends-abruptly-with-a-terminated-message
+pkill -f -x node
 
 number_of_nodes=$1
 export REGISTRY_ADDRESS=$2
@@ -74,4 +77,5 @@ do
    throttle $i $node_pid
 
    echo $node_pid >> process.pids
+
 done

@@ -3,6 +3,7 @@
 
 - hosts: registry
   any_errors_fatal: true
+  gather_facts: False
 
   tasks:
     - name: Zips stats forlder on registery machine
