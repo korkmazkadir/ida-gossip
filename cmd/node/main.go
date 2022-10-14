@@ -80,7 +80,7 @@ func main() {
 		log.Printf("received node list %d/%d\n", nodeCount, nodeConfig.NodeCount)
 	}
 
-	peerSet := createPeerSet(nodeList, nodeConfig.GossipFanout, nodeInfo.ID, nodeInfo.IPAddress, nodeConfig.ConnectionCount)
+	peerSet := createPeerSet(nodeList, nodeConfig.GossipFanout, nodeInfo.ID, nodeInfo.IPAddress, nodeConfig.ConnectionCount, nodeConfig.ParallelSendCount)
 	statLogger := common.NewStatLogger(nodeInfo.ID)
 	rapidchain := dissemination.NewDisseminator(demux, nodeConfig, peerSet, statLogger)
 
@@ -140,7 +140,7 @@ func getBandwidthUsage(processIndex string) int64 {
 	return bandwidthUsage
 }
 
-func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localIPAddress string, connectionCount int) *network.PeerSet {
+func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localIPAddress string, connectionCount int, parallelSendCount int) *network.PeerSet {
 
 	var copyNodeList []registery.NodeInfo
 	copyNodeList = append(copyNodeList, nodeList...)
@@ -148,7 +148,7 @@ func createPeerSet(nodeList []registery.NodeInfo, fanOut int, nodeID int, localI
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(copyNodeList), func(i, j int) { copyNodeList[i], copyNodeList[j] = copyNodeList[j], copyNodeList[i] })
 
-	peerSet := network.NewPeerSet(fanOut)
+	peerSet := network.NewPeerSet(fanOut, parallelSendCount)
 
 	log.Printf(">> Electing 16 peers\n")
 	peerCount := 0

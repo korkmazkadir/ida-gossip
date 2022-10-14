@@ -1,8 +1,38 @@
 
-gros-44.nancy.grid5000.fr
-gros-64.nancy.grid5000.fr
-gros-65.nancy.grid5000.fr
-gros-95.nancy.grid5000.fr
+grisou-1.nancy.grid5000.fr
+grisou-2.nancy.grid5000.fr
+grisou-3.nancy.grid5000.fr
+grisou-4.nancy.grid5000.fr
+grisou-10.nancy.grid5000.fr
+grisou-19.nancy.grid5000.fr
+grisou-20.nancy.grid5000.fr
+grisou-21.nancy.grid5000.fr
+grisou-22.nancy.grid5000.fr
+grisou-23.nancy.grid5000.fr
+grisou-24.nancy.grid5000.fr
+grisou-25.nancy.grid5000.fr
+grisou-26.nancy.grid5000.fr
+grisou-27.nancy.grid5000.fr
+grisou-28.nancy.grid5000.fr
+grisou-29.nancy.grid5000.fr
+grisou-30.nancy.grid5000.fr
+grisou-31.nancy.grid5000.fr
+grisou-32.nancy.grid5000.fr
+grisou-34.nancy.grid5000.fr
+grisou-35.nancy.grid5000.fr
+grisou-36.nancy.grid5000.fr
+grisou-37.nancy.grid5000.fr
+grisou-38.nancy.grid5000.fr
+grisou-39.nancy.grid5000.fr
+grisou-40.nancy.grid5000.fr
+grisou-41.nancy.grid5000.fr
+grisou-42.nancy.grid5000.fr
+grisou-43.nancy.grid5000.fr
+grisou-45.nancy.grid5000.fr
+grisou-46.nancy.grid5000.fr
+grisou-47.nancy.grid5000.fr
+
+
 
 
 
@@ -12,4 +42,4 @@ ansible_python_interpreter=/usr/bin/python3
 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
 [registry]
-gros-44.nancy.grid5000.fr
+grisou-1.nancy.grid5000.fr

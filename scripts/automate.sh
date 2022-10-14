@@ -48,6 +48,9 @@ log(){
 
 is_failed(){
     output_of_playbook=$1
+    time_str=$(date +'%d/%m/%Y %H:%M:%S')
+    echo "${time_str} ${1}" >> ansible.out
+    echo "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" >> ansible.out
     # cat ansible_out.txt | jq ".stats[] | select( .failures > 0 or .unreachable > 0 )"
     res=$(echo ${output_of_playbook} | jq ".stats[] | select( .failures > 0 or .unreachable > 0 )")
     [[ -z "$res" ]] && echo false || echo true

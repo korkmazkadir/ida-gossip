@@ -18,6 +18,8 @@ type NodeConfig struct {
 
 	ConnectionCount int
 
+	ParallelSendCount int
+
 	SourceCount int
 
 	MessageSize int
@@ -35,7 +37,7 @@ type NodeConfig struct {
 
 func (nc NodeConfig) Hash() []byte {
 
-	str := fmt.Sprintf("%d,%x,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", nc.NodeCount, nc.EpochSeed, nc.EndRound, nc.GossipFanout, nc.SourceCount, nc.MessageSize, nc.MessageChunkCount, nc.ConnectionCount, nc.DataChunkCount, nc.EndOfExperimentSleepTime, nc.FaultyNodePercent, nc.DisseminationTimeout)
+	str := fmt.Sprintf("%d,%x,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", nc.NodeCount, nc.EpochSeed, nc.EndRound, nc.GossipFanout, nc.SourceCount, nc.MessageSize, nc.MessageChunkCount, nc.ConnectionCount, nc.DataChunkCount, nc.EndOfExperimentSleepTime, nc.FaultyNodePercent, nc.DisseminationTimeout, nc.ParallelSendCount)
 
 	h := sha256.New()
 	_, err := h.Write([]byte(str))
@@ -54,6 +56,7 @@ func (nc *NodeConfig) CopyFields(cp NodeConfig) {
 	nc.RoundSleepTime = cp.RoundSleepTime
 	nc.GossipFanout = cp.GossipFanout
 	nc.ConnectionCount = cp.ConnectionCount
+	nc.ParallelSendCount = cp.ParallelSendCount
 	nc.SourceCount = cp.SourceCount
 	nc.MessageSize = cp.MessageSize
 	nc.MessageChunkCount = cp.MessageChunkCount

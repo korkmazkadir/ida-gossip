@@ -13,18 +13,28 @@ type PeerSet struct {
 	peers    []*P2PClient
 	fanout   int
 	isFaulty bool
+	sem      chan int
 }
 
-func NewPeerSet(fanout int) *PeerSet {
+func NewPeerSet(fanout int, parallelSendCount int) *PeerSet {
 
-	p := &PeerSet{fanout: fanout}
+	var sem chan int
+	if parallelSendCount > 0 {
+		sem = make(chan int, parallelSendCount)
+	}
+
+	p := &PeerSet{
+		fanout: fanout,
+		sem:    sem,
+	}
+
 	log.Printf("PeerSet created. Fanout is %d\n", fanout)
 	return p
 }
 
 func (p *PeerSet) AddPeer(IPAddress string, portNumber int, connectionCount int) error {
 
-	client, err := NewClient(IPAddress, portNumber, connectionCount)
+	client, err := NewClient(IPAddress, portNumber, connectionCount, p.sem)
 	if err != nil {
 		return err
 	}

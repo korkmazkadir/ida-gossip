@@ -1,6 +1,16 @@
 ---
 # The playbook uploads experiment artifacts to remote machines
 
+- hosts: all
+  any_errors_fatal: true
+  gather_facts: False
+
+  tasks:
+    - name: killing nodes
+      shell: 
+        cmd: pkill node || /bin/true; pkill registery || /bin/true;
+
+
 - hosts: registry
   any_errors_fatal: true
   gather_facts: False
@@ -10,12 +20,12 @@
     #  shell: 
     #    cmd: pkill registery || /bin/true
 
-    - name: killing registery, remove old stats.zip from home
-      shell: 
-        cmd: rm -f ~/stats.zip; pkill registery || /bin/true 
+    #- name: killing registery, remove old stats.zip from home
+    #  shell: 
+    #    cmd: pkill registery; rm -f ~/stats.zip; 
 
     - name: killing registery, remove old stats.zip, deploy registery service
-      shell: cd ~/ida-gossip; nohup ./registery > registery.log 2>&1 &
+      shell: rm -f ~/stats.zip; cd ~/ida-gossip; nohup ./registery > registery.log 2>&1 &
 
     
 
@@ -25,9 +35,9 @@
   gather_facts: False
 
   tasks:
-    #- name: killing nodes
-    #  shell: 
-    #    cmd: pkill node || /bin/true
+  #  - name: killing nodes
+  #    shell: 
+  #      cmd: pkill node || /bin/true
 
     - name: deploying nodes
       shell: cd ~/ida-gossip; nohup ./deploy-nodes.sh 128 "{{ groups['registry'][0] }}:1234" eno1 &

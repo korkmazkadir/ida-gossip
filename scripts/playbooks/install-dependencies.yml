@@ -21,4 +21,4 @@
         domain: root
         limit_type: soft
         limit_item: nofile
-        value: 102400
+        value: unlimited

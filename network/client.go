@@ -18,11 +18,13 @@ type P2PClient struct {
 
 	blockChunks chan common.Chunk
 
+	sem chan int
+
 	err error
 }
 
 // NewClient creates a new client
-func NewClient(IPAddress string, portNumber int, connectionCount int) (*P2PClient, error) {
+func NewClient(IPAddress string, portNumber int, connectionCount int, sem chan int) (*P2PClient, error) {
 
 	if connectionCount < 1 {
 		panic(fmt.Errorf("connection count is %d, it must be bigger than 1", connectionCount))
@@ -41,6 +43,7 @@ func NewClient(IPAddress string, portNumber int, connectionCount int) (*P2PClien
 	client.IPAddress = IPAddress
 	client.portNumber = portNumber
 	client.rpcClients = append(client.rpcClients, clients...)
+	client.sem = sem
 
 	client.blockChunks = make(chan common.Chunk, 1024)
 
@@ -73,15 +76,28 @@ func (c *P2PClient) mainLoop() {
 
 		//go c.rpcClient.Call("P2PServer.HandleBlockChunk", blockChunk, nil)
 
-		go func() {
+		if c.sem == nil {
 
-			err := rpcClient.Call("P2PServer.HandleBlockChunk", blockChunk, nil)
-			//TODO: needs to handle the error properly
-			if err != nil {
-				panic(err)
-			}
+			go func() {
+				err := rpcClient.Call("P2PServer.HandleBlockChunk", blockChunk, nil)
+				//TODO: needs to handle the error properly
+				if err != nil {
+					panic(err)
+				}
+			}()
+		} else {
 
-		}()
+			c.sem <- 1
+			go func() {
+
+				err := rpcClient.Call("P2PServer.HandleBlockChunk", blockChunk, nil)
+				//TODO: needs to handle the error properly
+				if err != nil {
+					panic(err)
+				}
+				<-c.sem
+			}()
+		}
 
 	}
 }

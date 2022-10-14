@@ -5,6 +5,7 @@
   "RoundSleepTime": 0,
   "GossipFanout": 16,
   "ConnectionCount": 1,
+  "ParallelSendCount":-1,
   "SourceCount" : 1,
   "MessageSize": 2097152,
   "MessageChunkCount": 128,
