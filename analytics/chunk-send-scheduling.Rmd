@@ -20,14 +20,15 @@ In each experiment send concurrency of nodes changed to measure the effect of se
 
 ```{r first_chunk_delivery, echo=FALSE}
 library(ggplot2)
+library(dplyr)
 
 
 mb_to_bytes<-1048576
 
-folder_path <- "/home/kadir/Desktop/ida-gossip-send_parallel_5_round/"
+folder_path <- "/home/kadir/Desktop/ida-gossip/scripts/stats/"
 
-target_variable <- as.name("ConcurrentSendCount")
-x_label="ConcurrentSendCount"
+target_variable <- as.name("ParallelSendCount")
+x_label="ParallelSendCount"
 
 
 df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
@@ -81,7 +82,7 @@ p3 <- ggplot(df_delivery_percent, aes(x= as.factor(!!target_variable), y=Deliver
 
 
 
-```{r send_time, echo=FALSE}
+```{r send_time, echo=FALSE, eval=FALSE}
 
 df_send_time <- read.csv(paste(folder_path, "send_time_df.tsv", sep = ""), sep = "\t", header = TRUE)
 df_send_time$MessageSize = df_send_time$MessageSize / mb_to_bytes
@@ -93,52 +94,6 @@ p4 <- ggplot(df_send_time, aes(x= as.factor(!!target_variable), y=Median, group=
       expand_limits(y = 0) +
       guides(color = "none")
 
-
-```
-
-
-```{r allign_plots, echo=FALSE, fig.height=9, fig.width=8}
-
-library(gridExtra)
-
-#p1 <- p1 + theme(axis.title.x = element_blank())
-#p2 <- p2 + theme(axis.title.x = element_blank())
-#p3 <- p3 + theme(axis.title.x = element_blank())
-
-#plots <- list( p1, p2, p3, p4 )
-plots <- list( p1, p2, p4 )
-grobs <- list()
-widths <- list()
-
-for (i in 1:length(plots)){
-    grobs[[i]] <- ggplotGrob(plots[[i]])
-    widths[[i]] <- grobs[[i]]$widths[2:5]
-}
-
-maxwidth <- do.call(grid::unit.pmax, widths)
-
-for (i in 1:length(grobs)){
-     grobs[[i]]$widths[2:5] <- as.list(maxwidth)
-}
-
-do.call( "grid.arrange", c(grobs, ncol = 1) )
-
-```
-
-
-\newpage
-```{r, echo=FALSE}
-suppressPackageStartupMessages(library(dplyr))
-library(knitr)
-
-names(df_chunks)[names(df_chunks) == 'MessageChunkCount'] <- "ChunkCount"
-names(df_message_delivery)[names(df_message_delivery) == 'MessageChunkCount'] <- "ChunkCount"
-names(df_delivery_percent)[names(df_delivery_percent) == 'MessageChunkCount'] <- "ChunkCount"
-names(df_send_time)[names(df_send_time) == 'MessageChunkCount'] <- "ChunkCount"
-
-
-df_chunks <- df_chunks %>% select( !!target_variable, ChunkCount, Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
-kable(df_chunks, caption = "First Chunk Delivery Time(ms)")
 
 ```
 

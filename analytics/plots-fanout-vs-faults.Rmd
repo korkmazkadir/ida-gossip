@@ -20,7 +20,8 @@ library(ggplot2)
 
 mb_to_bytes<-1048576
 
-folder_path <- "/home/kadir/Desktop/ida-gossip/scripts/stats/fanout-vs-faults/"
+#folder_path <- "/home/kadir/Desktop/ida-gossip/scripts/stats/"
+folder_path <- "/home/kadir/Desktop/ida-gossip-experiments/fanout-vs-faults/"
 
 
 ### FaultyNodePercent GossipFanout
@@ -103,7 +104,8 @@ names(df_delivery_percent)[names(df_delivery_percent) == 'MessageChunkCount'] <-
 
 
 \newpage
-```{r, echo=FALSE, fig.height=3, fig.width=4}
+#```{r, echo=FALSE, fig.height=3, fig.width=4}
+```{r, echo=FALSE, fig.height=5, fig.width=4}
 
 #https://waterdata.usgs.gov/blog/beyond-basic-plotting/
 
@@ -114,7 +116,7 @@ df_delivery_percent <- df_delivery_percent  %>% select( !!target_variable, Gossi
 merged_df <- merge( df_chunks, df_message_delivery )
 merged_df <- merge( merged_df, df_delivery_percent )
 
-merged_df <- df_delivery_percent
+#merged_df <- df_delivery_percent
 
 library(reshape)
 melted_df <- melt(merged_df, id=c("FaultyNodePercent","GossipFanout","ChunkCount"))

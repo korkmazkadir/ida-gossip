@@ -115,6 +115,16 @@ calculate_datasets <- function(directories) {
     stats_file <- paste(directory, "/stats.log", sep = "")
 
     config <- fromJSON(file = config_file)
+    
+    
+    ##
+    ##
+    ## TODO: FIX THIS
+    config$ParallelSendCount <- NULL
+    ##
+    ##
+    ##
+    
     run_stats <- read.csv(stats_file, sep = "\t", header = FALSE)
     stats <- rbind(stats, run_stats)
 
@@ -125,6 +135,7 @@ calculate_datasets <- function(directories) {
   
     colnames(stats) <- c("NodeID", "Round", "Event", "Value")
 
+    
     # first chunk delivery
     df <- create_first_chunk_df(config, stats)
     first_chunk_delivery_df <- rbind(first_chunk_delivery_df, df)

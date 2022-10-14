@@ -2,9 +2,13 @@
 
 source("batch-stats-aggregator.R")
 
-#path <- "/Users/kadir/Desktop/ida-gossip/scripts/stats"
-path <- "/home/kadir/Desktop/ida-gossip-experiments-faults-injected"
+#path <- "/home/kadir/Desktop/ida-gossip-experiments/classic_gossip_1psend"
+#path <- "/home/kadir/Desktop/ida-gossip-experiments-faults-injected"
 #path <-"/home/kadir/Desktop/ida-gossip-experiments-faults-injected"
+
+path <-"/home/kadir/Desktop/ida-gossip-experiments/classic_gossip_1psend"
+
+#path <-"/home/kadir/Desktop/ida-gossip/scripts/stats"
 
 # lists zip files under the folder
 zip_files <- list.files(path = path, pattern = "*.zip", full.names = TRUE)

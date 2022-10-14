@@ -9,6 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 \newpage
 
 ```{r first_chunk_delivery, echo=FALSE}
@@ -18,19 +19,23 @@ library(dplyr)
 
 mb_to_bytes<-1048576
 
+folder_path <- "/home/kadir/Desktop/ida-gossip-experiments/classic_gossip_1psend/"
 
-#folder_path <- "/home/kadir/Desktop/ida-gossip-experiments/simultaneously_served_conn_2mb/"
-#target_variable <- as.name("ParallelSendCount")
-
-parallel_send_plot <- FALSE
-
-folder_path <- "/home/kadir/Desktop/ida-gossip-experiments/normal-case-fault-free-fanout-8/"
 target_variable <- as.name("MessageSize")
-
 x_label="Message Size (MB)"
 
 df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
 df_chunks$MessageSize = df_chunks$MessageSize / mb_to_bytes
+
+
+p1 <- ggplot(df_chunks, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount))) +
+      geom_line()+
+      geom_point()+
+      labs(x=x_label, y="First Chunk Delivery Time(ms)",  color='Chunk Count') +
+      expand_limits(y = 0) + 
+      theme(legend.position="top")
+
+
 
 ```
 
@@ -40,6 +45,17 @@ df_chunks$MessageSize = df_chunks$MessageSize / mb_to_bytes
 df_message_delivery <- read.csv(paste(folder_path, "message_received_df.tsv", sep = ""), sep = "\t", header = TRUE)
 df_message_delivery$MessageSize = df_message_delivery$MessageSize / mb_to_bytes
 
+
+#df_message_delivery <- df_message_delivery %>% filter(MessageSize<=8)
+
+p2 <- ggplot(df_message_delivery, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount) )) +
+      geom_line()+
+      geom_point()+
+      labs(x=x_label, y="Message Delivery Time(ms)",  color='Chunk Count') +
+      expand_limits(y = 0) +
+      theme(legend.position="top")
+
+
 ```
 
 ```{r queue_length, echo=FALSE, fig.height=3}
@@ -47,6 +63,43 @@ df_message_delivery$MessageSize = df_message_delivery$MessageSize / mb_to_bytes
 df_network_usage <- read.csv(paste(folder_path, "network_usage_df.tsv", sep = ""), sep = "\t", header = TRUE)
 df_network_usage$MessageSize = df_network_usage$MessageSize / mb_to_bytes
 df_network_usage$Median = df_network_usage$Median / mb_to_bytes
+
+p3 <- ggplot(df_network_usage, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount) )) +
+      geom_line()+
+      geom_point()+
+      labs(x=x_label, y="Network Usage(MB)",  color='Chunk Count') +
+      expand_limits(y = 0) +
+      guides(color = FALSE)
+
+
+```
+
+
+
+```{r allign_plots, echo=FALSE, fig.height=9, fig.width=8}
+
+library(gridExtra)
+
+#p1 <- p1 + theme(axis.title.x = element_blank())
+#p2 <- p2 + theme(axis.title.x = element_blank())
+#p3 <- p3 + theme(axis.title.x = element_blank())
+
+plots <- list( p1, p2, p3 )
+grobs <- list()
+widths <- list()
+
+for (i in 1:length(plots)){
+    grobs[[i]] <- ggplotGrob(plots[[i]])
+    widths[[i]] <- grobs[[i]]$widths[2:5]
+}
+
+maxwidth <- do.call(grid::unit.pmax, widths)
+
+for (i in 1:length(grobs)){
+     grobs[[i]]$widths[2:5] <- as.list(maxwidth)
+}
+
+do.call( "grid.arrange", c(grobs, ncol = 1) )
 
 ```
 
@@ -61,6 +114,7 @@ names(df_message_delivery)[names(df_message_delivery) == 'MessageChunkCount'] <-
 names(df_network_usage)[names(df_network_usage) == 'MessageChunkCount'] <- "ChunkCount"
 
 df_chunks <- df_chunks %>% select( !!target_variable, ChunkCount, Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
+kable(df_chunks, caption = "First Chunk Delivery Time(ms)")
 
 ```
 
@@ -68,6 +122,7 @@ df_chunks <- df_chunks %>% select( !!target_variable, ChunkCount, Min, FirstQuar
 ```{r, echo=FALSE}
 
 df_message_delivery <- df_message_delivery  %>% select( !!target_variable, ChunkCount,  Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
+kable(df_message_delivery, caption = "Message Delivery Time(ms)")
 
 ```
 
@@ -85,18 +140,14 @@ df_network_usage$Mean = df_network_usage$Mean / mb_to_bytes
 
 
 df_network_usage <- df_network_usage  %>% select( !!target_variable, ChunkCount, Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
+kable(df_network_usage, caption = "Network Usage(MB)")
 
 ```
 
 
 
 \newpage
-```{r, echo=FALSE, fig.width=3.5, fig.height=3, eval=parallel_send_plot}
-
-##### ParallelSendCount  Plots ######
-
-target_variable <- as.name("ParallelSendCount")
-x_label="Simultaneously Served Connection Count"
+```{r, echo=FALSE,  fig.width=3.5, fig.height=3, eval=TRUE}
 
 #https://waterdata.usgs.gov/blog/beyond-basic-plotting/
 
@@ -111,79 +162,35 @@ df_message_delivery <- df_message_delivery  %>% select( !!target_variable, Chunk
 df_network_usage <- df_network_usage  %>% select( !!target_variable, ChunkCount, Median,FirstQuartile,ThirdQuartile) %>% rename( NetworkUsage = Median)
 
 
+df_message_delivery <- df_message_delivery %>% mutate(ChunkCount = replace(ChunkCount, ChunkCount == 1, "Classic Gossip"))
+df_message_delivery <- df_message_delivery %>% mutate(ChunkCount = replace(ChunkCount, ChunkCount == 128, "IDA-Gossip"))
+
+df_network_usage <- df_network_usage %>% mutate(ChunkCount = replace(ChunkCount, ChunkCount == 1, "Classic Gossip"))
+df_network_usage <- df_network_usage %>% mutate(ChunkCount = replace(ChunkCount, ChunkCount == 128, "IDA-Gossip"))
+
 library(reshape)
 
-df_chunks.melted <- melt(df_chunks, id=c("ParallelSendCount","ChunkCount", "FirstQuartile", "ThirdQuartile"))
-df_message_delivery.melted <- melt(df_message_delivery, id=c("ParallelSendCount","ChunkCount", "FirstQuartile", "ThirdQuartile"))
-df_network_usage.melted <- melt(df_network_usage, id=c("ParallelSendCount","ChunkCount", "FirstQuartile", "ThirdQuartile"))
+#df_chunks.melted <- melt(df_chunks, id=c("MessageSize","ChunkCount", "FirstQuartile", "ThirdQuartile"))
+df_message_delivery.melted <- melt(df_message_delivery, id=c("MessageSize","ChunkCount", "FirstQuartile", "ThirdQuartile"))
+df_network_usage.melted <- melt(df_network_usage, id=c("MessageSize","ChunkCount", "FirstQuartile", "ThirdQuartile"))
  
-merged_df <- rbind( df_chunks.melted, df_message_delivery.melted )
+#merged_df <- rbind( df_chunks.melted, df_message_delivery.melted )
 #merged_df <- rbind( merged_df, df_network_usage.melted )
+
+merged_df <- rbind( df_message_delivery.melted, df_network_usage.melted )
 
 p <- ggplot(merged_df, aes(x= as.factor(!!target_variable), y=value,  group=ChunkCount, color=as.factor(ChunkCount), linetype=as.factor(ChunkCount), shape=as.factor(ChunkCount) )) +
       geom_line()+
       geom_point()+
       geom_errorbar( aes(ymin=FirstQuartile, ymax=ThirdQuartile), width=0.1, alpha=1, size=0.2)+
       expand_limits(y = 0) +
-      labs(color='Chunk Count', shape='Chunk Count', linetype='Chunk Count') +
+      labs(color='', shape='', linetype='') +
       theme_bw()+
       theme(legend.position="top") +
       ylab(NULL) +
       xlab(x_label) +
       theme(strip.background = element_blank(), # remove the background
-          strip.placement = "outside", legend.margin=margin(0,-0,-6,0))
-
-#, switch = "y"
-p <- p + facet_grid(variable ~ ., scales = "free_y" , labeller = as_labeller(
-      c(ChunkDelivery = "First Chunk Delivery (ms)", MessageDelivery = "Message Delivery (ms)" , NetworkUsage = "Uploaded Data (MB)"))
-  ) + theme(plot.margin = margin(0,0,0,0, "cm")) + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) #+ scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) 
-
-p <- p + theme(text = element_text(family="Times", face="plain", size=8), strip.text.y=element_text(family="Times", face="plain", size=8))
-
-p
-
-ggsave("simultaneously-served-connections.pdf", p)
-
-
-```
-
-\newpage
-```{r, echo=FALSE, fig.width=3.5, fig.height=4.5, eval=!parallel_send_plot}
-
-#https://waterdata.usgs.gov/blog/beyond-basic-plotting/
-
-names(df_chunks)[names(df_chunks) == 'MessageChunkCount'] <- "ChunkCount"
-names(df_message_delivery)[names(df_message_delivery) == 'MessageChunkCount'] <- "ChunkCount"
-names(df_network_usage)[names(df_network_usage) == 'MessageChunkCount'] <- "ChunkCount"
-
-#FirstQuartile ThirdQuartile
-
-df_chunks <- df_chunks %>% select( !!target_variable, ChunkCount, Median,FirstQuartile,ThirdQuartile) %>% rename( ChunkDelivery = Median)
-df_message_delivery <- df_message_delivery  %>% select( !!target_variable, ChunkCount, Median,FirstQuartile,ThirdQuartile) %>% rename( MessageDelivery = Median)
-df_network_usage <- df_network_usage  %>% select( !!target_variable, ChunkCount, Median,FirstQuartile,ThirdQuartile) %>% rename( NetworkUsage = Median)
-
-
-library(reshape)
-
-df_chunks.melted <- melt(df_chunks, id=c("MessageSize","ChunkCount", "FirstQuartile", "ThirdQuartile"))
-df_message_delivery.melted <- melt(df_message_delivery, id=c("MessageSize","ChunkCount", "FirstQuartile", "ThirdQuartile"))
-df_network_usage.melted <- melt(df_network_usage, id=c("MessageSize","ChunkCount", "FirstQuartile", "ThirdQuartile"))
- 
-merged_df <- rbind( df_chunks.melted, df_message_delivery.melted )
-merged_df <- rbind( merged_df, df_network_usage.melted )
-
-p <- ggplot(merged_df, aes(x= as.factor(!!target_variable), y=value,  group=ChunkCount, color=as.factor(ChunkCount), linetype=as.factor(ChunkCount), shape=as.factor(ChunkCount) )) +
-      geom_line()+
-      geom_point()+
-      geom_errorbar( aes(ymin=FirstQuartile, ymax=ThirdQuartile), width=0.1, alpha=1, size=0.2)+
-      #expand_limits(y = 0) +
-      labs(color='Chunk Count', shape='Chunk Count', linetype='Chunk Count') +
-      theme_bw()+
-      theme(legend.position="top") +
-      ylab(NULL) +
-      xlab(x_label) +
-      theme(strip.background = element_blank(), # remove the background
-          strip.placement = "outside", legend.margin=margin(0,-0,-6,0))
+          strip.placement = "outside", legend.margin=margin(0,-0,-6,0) )
 
 #, switch = "y"
 p <- p + facet_grid(variable ~ ., scales = "free_y" , labeller = as_labeller(
@@ -192,9 +199,10 @@ p <- p + facet_grid(variable ~ ., scales = "free_y" , labeller = as_labeller(
 
 p <- p + theme(text = element_text(family="Times", face="plain", size=8), strip.text.y=element_text(family="Times", face="plain", size=8))
 
+
 p
 
-ggsave("fault-free.pdf", p)
+ggsave("classic-vs-ida.pdf", p)
 
 
 ```
