@@ -9,44 +9,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Experimental Setup
-4096 process deployed on 32 machines---128 processes per machine---from G5K.
-The bandwidth of each process is capped at 20Mbps(Upload Bandwidth). 
-One-way latency of 15ms added to each communication link(RTT is 30ms).
-
-
-In this set of experiments, we vary the size of messages and chunk counts, and we measure the following metrics:
-
-* First chunk delivery time in milliseconds
-
-* Message delivery time in milliseconds
-
-* Percent of nodes delivered the message 
-
-Each experiment run for 5 times. First chunk delivery and message delivery times are measured once for each node and for each round, therefore
-these metrics measured 4096*5 (number of nodes times number of rounds) per experiment. Network usage is the total data uploaded during an experiment, and it is measured using OS level counters: for each node, network usage is measured once at the end of an experiment. The resulting measurements are used to calculate percentiles(%0, %25 %50, %75 and %100).
-
-
-## IDA Gossip Implementation
-We have a fully functional IDA gossip implementation with:
-
-* Erasure coding
-
-* Merkle path authentication
-
-The percent of data chunks and parity chunks are calculated as described in the paper.
-
-
-## Important Notes
-
-* All charts plotted using ***MEDIAN*** values.
-
-* Data used to plot charts are provided at the end of the report in the form of a table.
-
-* Each data table contains the RowCount which is the number of measurements considered to calculate statistics.
-
-* All results of an experiment (from 5 different run) combined to calculate statistics.
-
 \newpage
 
 ```{r first_chunk_delivery, echo=FALSE}
@@ -69,17 +31,6 @@ x_label="Faulty Node Percent"
 df_chunks <- read.csv(paste(folder_path, "first_chunk_delivery_df.tsv", sep = ""), sep = "\t", header = TRUE)
 df_chunks$MessageSize = df_chunks$MessageSize / mb_to_bytes
 
-p1 <- ggplot(df_chunks, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount), linetype=as.factor(MessageChunkCount), shape=as.factor(MessageChunkCount) )) +
-      geom_line()+
-      geom_point()+
-      labs(x=x_label, y="First Chunk Delivery Time(ms)",  color='Chunk Count', shape='Chunk Count', linetype='Chunk Count') +
-      expand_limits(y = 0) + 
-      theme_bw() +
-      theme(legend.position="top")
-      
-      #theme(legend.position = c(0.87, 0.25),
-      #  legend.background = element_rect(fill = "white", color = "black"))
-
 
 
 ```
@@ -89,15 +40,6 @@ p1 <- ggplot(df_chunks, aes(x= as.factor(!!target_variable), y=Median, group=Mes
 
 df_message_delivery <- read.csv(paste(folder_path, "message_received_df.tsv", sep = ""), sep = "\t", header = TRUE)
 df_message_delivery$MessageSize = df_message_delivery$MessageSize / mb_to_bytes
-
-p2 <- ggplot(df_message_delivery, aes(x= as.factor(!!target_variable), y=Median, group=MessageChunkCount, color=as.factor(MessageChunkCount), linetype=as.factor(MessageChunkCount), shape=as.factor(MessageChunkCount) )) +
-      geom_line()+
-      geom_point()+
-      labs(x=x_label, y="Message Delivery Time(ms)",  color='Chunk Count', shape='Chunk Count', linetype='Chunk Count') +
-      expand_limits(y = 0) +
-      guides(color = "none", shape="none", linetype="none") +
-      theme_bw() +
-      theme(legend.position="top")
 
 
 ```
@@ -110,58 +52,9 @@ df_delivery_percent <- data.frame(df_message_delivery)
 
 df_delivery_percent$DeliveryPercent <- (df_message_delivery$RowCount/df_message_delivery$ExperimentCount) * 100 / df_message_delivery$NodeCount
 
-p3 <- ggplot(df_delivery_percent, aes(x= as.factor(!!target_variable), y=DeliveryPercent, group=MessageChunkCount, color=as.factor(MessageChunkCount), linetype=as.factor(MessageChunkCount), shape=as.factor(MessageChunkCount) )) +
-      geom_line()+
-      geom_point()+
-      labs(x=x_label, y="Message Delivery Percent",  color='Chunk Count', shape='Chunk Count', linetype='Chunk Count') +
-      expand_limits(y = 0) +
-      guides(color = "none", shape="none", linetype="none")  +
-      theme_bw() +
-      theme(legend.position="top")
-
-
-
 ```
 
 
-
-```{r allign_plots, echo=FALSE, fig.height=8, fig.width=4}
-
-library(gridExtra)
-library(cowplot)
-
-p1 <- p1 + theme(axis.title.x = element_blank())
-p2 <- p2 + theme(axis.title.x = element_blank())
-p3 <- p3 + theme(axis.title.x = element_blank())
-
-p1 <- p1 + theme(legend.position="none")
-p2 <- p2 + theme(legend.position="none")
-p3 <- p3 + theme(legend.position="none")
-
-# 
-# plots <- list( p1, p2, p3 )
-# grobs <- list()
-# widths <- list()
-# 
-# for (i in 1:length(plots)){
-#     grobs[[i]] <- ggplotGrob(plots[[i]])
-#     widths[[i]] <- grobs[[i]]$widths[2:5]
-# }
-# 
-# maxwidth <- do.call(grid::unit.pmax, widths)
-# 
-# for (i in 1:length(grobs)){
-#      grobs[[i]]$widths[2:5] <- as.list(maxwidth)
-# }
-
-#g<-plot_grid(p1, p2, p3, align = "v", nrow = 3, rel_heights = c(2, 2, 2))
-g<-plot_grid(p1, p2, p3,align = "v", nrow = 3) 
-
-g
-
-#ggsave("faults.pdf", g)
-
-```
 
 
 \newpage
@@ -175,7 +68,11 @@ names(df_delivery_percent)[names(df_delivery_percent) == 'MessageChunkCount'] <-
 
 
 df_chunks <- df_chunks %>% select( !!target_variable, ChunkCount, Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
-kable(df_chunks, caption = "First Chunk Delivery Time(ms)")
+
+# converts ms to S
+df_chunks$FirstQuartile <- df_chunks$FirstQuartile / 1000
+df_chunks$Median <- df_chunks$Median / 1000
+df_chunks$ThirdQuartile <- df_chunks$ThirdQuartile / 1000
 
 ```
 
@@ -183,8 +80,11 @@ kable(df_chunks, caption = "First Chunk Delivery Time(ms)")
 ```{r, echo=FALSE}
 
 df_message_delivery <- df_message_delivery  %>% select( !!target_variable, ChunkCount,  Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, RowCount) %>% arrange( !!target_variable, ChunkCount )
-kable(df_message_delivery, caption = "Message Delivery Time(ms)")
 
+# converts ms to S
+df_message_delivery$FirstQuartile <- df_message_delivery$FirstQuartile / 1000
+df_message_delivery$Median <- df_message_delivery$Median / 1000
+df_message_delivery$ThirdQuartile <- df_message_delivery$ThirdQuartile / 1000
 ```
 
 
@@ -195,7 +95,6 @@ kable(df_message_delivery, caption = "Message Delivery Time(ms)")
 df_delivery_percent$DeliveryPercent
 
 df_delivery_percent <- df_delivery_percent  %>% select( !!target_variable, ChunkCount,  Min, FirstQuartile, Median, ThirdQuartile, Max, Mean, DeliveryPercent) %>% arrange( !!target_variable, ChunkCount )
-kable(df_delivery_percent, caption = "Message Delivery Percent")
 
 ```
 
@@ -237,9 +136,9 @@ p <- ggplot(melted_df, aes(x= as.factor(!!target_variable), y=value,  group=Chun
           strip.placement = "outside", legend.margin=margin(0,-0,-6,0))
 
 #, switch = "y"
-p <- p + facet_grid(variable ~ ., scales = "free_y" , labeller = as_labeller(
-      c(ChunkDelivery = "First Chunk Delivery (ms)", MessageDelivery = "Message Delivery (ms)", DeliveryPercent = "Delivery %"))
-  ) + theme(plot.margin = margin(0,0,0,0, "cm")) #+ scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
+p <- p + facet_grid(variable ~ ., scales = "free_y", switch = "y", labeller = as_labeller(
+      c(ChunkDelivery = "First Chunk Latency (S)", MessageDelivery = "Latency (S)", DeliveryPercent = "Coverage (%)"))
+  ) + theme(plot.margin = margin(0,0.5,0,0, "cm")) #+ scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
 
 p <- p + theme(text = element_text(family="Times", face="plain", size=8), strip.text.y=element_text(family="Times", face="plain", size=8))
 
