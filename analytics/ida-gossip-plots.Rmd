@@ -19,13 +19,13 @@ library(dplyr)
 mb_to_bytes<-1048576
 
 
-folder_path <- "/home/kadir/Desktop/ida-gossip-experiments/simultaneously_served_conn_2mb/"
-target_variable <- as.name("ParallelSendCount")
+#folder_path <- "/home/kadir/Desktop/ida-gossip-experiments/simultaneously_served_conn_2mb/"
+#target_variable <- as.name("ParallelSendCount")
 
-parallel_send_plot <- TRUE
+parallel_send_plot <- FALSE
 
-#folder_path <- "/home/kadir/Desktop/ida-gossip-experiments/normal-case-fault-free-fanout-8/"
-#target_variable <- as.name("MessageSize")
+folder_path <- "/home/kadir/Desktop/ida-gossip-experiments/normal-case-fault-free-fanout-8/"
+target_variable <- as.name("MessageSize")
 
 x_label="Message Size (MB)"
 
@@ -104,12 +104,19 @@ df_network_usage <- df_network_usage  %>% select( !!target_variable, ChunkCount,
 
 
 \newpage
-```{r, echo=FALSE, fig.width=3.5, fig.height=3, eval=parallel_send_plot}
+#```{r, echo=FALSE, fig.width=3.5, fig.height=3, eval=parallel_send_plot}
+```{r, echo=FALSE, fig.width=4, fig.height=4, eval=parallel_send_plot}
+
+##### DELETE THIS FILTERS
+#df_chunks <- df_chunks %>% filter( ParallelSendCount >= 4 )
+#df_message_delivery <- df_message_delivery %>% filter( ParallelSendCount >= 4 )
+#df_network_usage <- df_network_usage %>% filter( ParallelSendCount >= 4 )
+######## End of Delete
 
 ##### ParallelSendCount  Plots ######
 
 target_variable <- as.name("ParallelSendCount")
-x_label="Simultaneously Served Connection Count"
+x_label="Dissemination Concurrency"
 
 #https://waterdata.usgs.gov/blog/beyond-basic-plotting/
 
@@ -151,7 +158,7 @@ p <- p + facet_grid(variable ~ ., scales = "free_y", switch = "y", labeller = as
       c(ChunkDelivery = "First Chunk Latency (S)", MessageDelivery = "Latency (S)" , NetworkUsage = "Uploaded Data (MB)"))
   ) + theme(plot.margin = margin(0,0.5,0,0, "cm")) + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) #+ scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) 
 
-p <- p + theme(text = element_text(family="Times", face="plain", size=8), strip.text.y=element_text(family="Times", face="plain", size=8))
+p <- p + theme(text = element_text(family="Times", face="plain", size=11), strip.text.y=element_text(family="Times", face="plain", size=12))
 
 p
 
@@ -161,7 +168,8 @@ ggsave("simultaneously-served-connections.pdf", p)
 ```
 
 \newpage
-```{r, echo=FALSE, fig.width=3.5, fig.height=4.5, eval=!parallel_send_plot}
+#```{r, echo=FALSE, fig.width=3.5, fig.height=4.5, eval=!parallel_send_plot}
+```{r, echo=FALSE, fig.width=5, fig.height=6, eval=!parallel_send_plot}
 
 #https://waterdata.usgs.gov/blog/beyond-basic-plotting/
 
@@ -203,7 +211,7 @@ p <- p + facet_grid(variable ~ ., scales = "free_y", switch = "y", labeller = as
       c(ChunkDelivery = "First Chunk Latency (S)", MessageDelivery = "Latency (S)", NetworkUsage = "Uploaded Data (MB)"))
   ) + theme(plot.margin = margin(0,0.5,0,0, "cm")) + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) #+ scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) 
 
-p <- p + theme(text = element_text(family="Times", face="plain", size=8), strip.text.y=element_text(family="Times", face="plain", size=8))
+p <- p + theme(text = element_text(family="Times", face="plain", size=12), strip.text.y=element_text(family="Times", face="plain", size=12))
 
 p
 

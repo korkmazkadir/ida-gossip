@@ -99,7 +99,8 @@ df_delivery_percent <- df_delivery_percent  %>% select( !!target_variable, Chunk
 ```
 
 \newpage
-```{r, echo=FALSE, fig.width=3.5, fig.height=4.5}
+#```{r, echo=FALSE, fig.width=3.5, fig.height=4.5}
+```{r, echo=FALSE, fig.width=5, fig.height=6}
 
 #https://waterdata.usgs.gov/blog/beyond-basic-plotting/
 
@@ -140,7 +141,7 @@ p <- p + facet_grid(variable ~ ., scales = "free_y", switch = "y", labeller = as
       c(ChunkDelivery = "First Chunk Latency (S)", MessageDelivery = "Latency (S)", DeliveryPercent = "Coverage (%)"))
   ) + theme(plot.margin = margin(0,0.5,0,0, "cm")) #+ scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
 
-p <- p + theme(text = element_text(family="Times", face="plain", size=8), strip.text.y=element_text(family="Times", face="plain", size=8))
+p <- p + theme(text = element_text(family="Times", face="plain", size=12), strip.text.y=element_text(family="Times", face="plain", size=12))
 
 p
 

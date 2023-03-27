@@ -6,7 +6,7 @@ source("batch-stats-aggregator.R")
 #path <- "/home/kadir/Desktop/ida-gossip-experiments-faults-injected"
 #path <-"/home/kadir/Desktop/ida-gossip-experiments-faults-injected"
 
-path <-"/home/kadir/Desktop/ida-gossip-experiments/classic_gossip_1psend"
+path <-"/home/kadir/Desktop/ida-gossip/scripts/stats"
 
 #path <-"/home/kadir/Desktop/ida-gossip/scripts/stats"
 

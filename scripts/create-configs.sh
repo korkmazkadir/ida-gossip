@@ -5,9 +5,9 @@
 message_sizes=(2) #in megabytes
 #message_sizes=(20) #in megabytes
 #fault_percents=(5 10 15 20 25 30) #in megabytes
-fault_percents=(35 40) #in megabytes
+fault_percents=(0) #in megabytes
 
-chunk_counts=(16)
+chunk_counts=(16 32 64 128 256)
 #
 #fanouts=(8 9 10 11 12 13 14 15 16)
 fanouts=(8)
@@ -15,7 +15,7 @@ fanouts=(8)
 connection_counts=(1)
 
 #parallel_send_counts=(1 2 4 8 16 32 64 128)
-parallel_send_counts=(1)
+parallel_send_counts=(0)
 
 
 #### End of experiment sleep times ####
@@ -34,7 +34,7 @@ sleep_times["20"]=120
 sleep_times["24"]=250
 sleep_times["28"]=300
 sleep_times["32"]=300
-sleep_times["36"]=230
+sleep_times["36"]=300
 ########################################
 
 
@@ -56,8 +56,8 @@ for size in ${message_sizes[@]}; do
 
         for fault_percent in ${fault_percents[@]}; do
 
-            #sleep_time=${sleep_times[${size}]}
-            let sleep_time=(${sleep_times[${size}]}*2)
+            sleep_time=${sleep_times[${size}]}
+            #let sleep_time=(${sleep_times[${size}]}*2)
 
             for fanout in ${fanouts[@]}; do
 

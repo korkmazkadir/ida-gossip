@@ -19,7 +19,12 @@ library(dplyr)
 
 mb_to_bytes<-1048576
 
+
+
 folder_path <- "/home/kadir/Desktop/ida-gossip-experiments/classic_gossip_1psend/"
+
+#folder_path <- "/home/kadir/Desktop/classic_gossip_1psend/"
+
 
 target_variable <- as.name("MessageSize")
 x_label="Message Size (MB)"
@@ -113,7 +118,8 @@ df_network_usage <- df_network_usage  %>% select( !!target_variable, ChunkCount,
 
 
 \newpage
-```{r, echo=FALSE,  fig.width=3.5, fig.height=4.5, eval=TRUE}
+#```{r, echo=FALSE,  fig.width=3.5, fig.height=4.5, eval=TRUE}
+```{r, echo=FALSE,  fig.width=5, fig.height=6, eval=TRUE}
 
 #https://waterdata.usgs.gov/blog/beyond-basic-plotting/
 
@@ -166,7 +172,7 @@ p <- p + facet_grid(variable ~ ., scales = "free_y", switch = "y", labeller = as
       c(ChunkDelivery = "First Chunk Latency (S)", MessageDelivery = "Latency (S)", NetworkUsage = "Uploaded Data (MB)"))
   ) + theme(plot.margin = margin(0,0.5,0,0, "cm")) + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) #+ scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) 
 
-p <- p + theme(text = element_text(family="Times", face="plain", size=8), strip.text.y=element_text(family="Times", face="plain", size=8))
+p <- p + theme(text = element_text(family="Times", face="plain", size=12), strip.text.y=element_text(family="Times", face="plain", size=12))
 
 
 p

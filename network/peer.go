@@ -65,6 +65,10 @@ func (p *PeerSet) ForwardChunk(chunk common.Chunk) {
 		return
 	}
 
+	// Provides a random sampling for each chunk with in 16 peers.
+	//rand.Seed(time.Now().UnixNano())
+	//rand.Shuffle(len(p.peers), func(i, j int) { p.peers[i], p.peers[j] = p.peers[j], p.peers[i] })
+
 	forwardCount := 0
 	for _, peer := range p.peers {
 		if peer.err != nil {
